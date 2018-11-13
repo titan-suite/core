@@ -15,7 +15,7 @@ export const getBalance = (
   {
     address
   }: {
-    address: string;
+    address: string
   },
   web3: Web3
 ) => {
@@ -33,7 +33,7 @@ export const compile = async (
   {
     contract
   }: {
-    contract: string;
+    contract: string
   },
   web3: Web3
 ): Promise<{ [key: string]: any }> => {
@@ -57,8 +57,8 @@ export const unlock = async (
     mainAccount,
     mainAccountPass
   }: {
-    mainAccount: string;
-    mainAccountPass: string;
+    mainAccount: string
+    mainAccountPass: string
   },
   web3: Web3
 ) => {
@@ -90,17 +90,17 @@ const Web3DeployContract = async (
     gas,
     contractArguments
   }: {
-    abi: ContractAbi;
-    code: string;
-    mainAccount: string;
-    gas: number;
-    contractArguments: string | null | undefined;
+    abi: ContractAbi
+    code: string
+    mainAccount: string
+    gas: number
+    contractArguments: string | null | undefined
   },
   web3: Web3
 ): Promise<{
-  abi?: ContractAbi;
-  address?: string;
-  receipt?: TransactionReceipt;
+  abi?: ContractAbi
+  address?: string
+  receipt?: TransactionReceipt
 }> => {
   return new Promise((resolve, reject) => {
     if (contractArguments && contractArguments.length > 0) {
@@ -149,11 +149,11 @@ export const deploy = async (
     gas,
     contractArguments
   }: {
-    abi: AbiDefinition[];
-    code: string;
-    mainAccount: string;
-    gas: number;
-    contractArguments: string | null | undefined;
+    abi: AbiDefinition[]
+    code: string
+    mainAccount: string
+    gas: number
+    contractArguments: string | null | undefined
   },
   web3: Web3
 ) => {
