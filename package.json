@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "preinstall": "yarn && cd aion && yarn && npm run build && cd ..",
+    "preinstall": "cd aion && yarn && npm run build && cd ..",
     "build": "tsc"
   },
   "devDependencies": {
