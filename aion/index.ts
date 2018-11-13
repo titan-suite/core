@@ -132,7 +132,10 @@ const Web3DeployContract = async (
           if (err) {
             reject(err)
           } else if (contract && contract.address) {
-            resolve(contract)
+            resolve({
+              ...contract,
+              receipt: web3.eth.getTransactionReceipt(contract.transactionHash)
+            })
           }
         }
       )
