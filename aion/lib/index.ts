@@ -1,5 +1,5 @@
 import Web3 from 'aion-web3'
-import { ContractAbi, AbiDefinition } from 'ethereum-types'
+import { ContractAbi, AbiDefinition, TransactionReceipt } from 'ethereum-types'
 
 export const getAccounts = (web3: Web3) => {
   return new Promise((resolve, reject) => {
@@ -11,11 +11,14 @@ export const getAccounts = (web3: Web3) => {
     })
   })
 }
-export const getBalance = ({
-  address,
-}: {
-  address: string;
-}, web3: Web3) => {
+export const getBalance = (
+  {
+    address
+  }: {
+    address: string;
+  },
+  web3: Web3
+) => {
   return new Promise((resolve, reject) => {
     web3.eth.getBalance(address, (err, balance) => {
       if (err) {
@@ -26,11 +29,14 @@ export const getBalance = ({
   })
 }
 
-export const compile = async ({
-  contract,
-}: {
-  contract: string;
-},web3: Web3): Promise<{ [key: string]: any }> => {
+export const compile = async (
+  {
+    contract
+  }: {
+    contract: string;
+  },
+  web3: Web3
+): Promise<{ [key: string]: any }> => {
   return new Promise((resolve, reject) => {
     web3.eth.compile.solidity(contract, (err: any, res: any) => {
       if (err) {
@@ -46,13 +52,16 @@ export const compile = async ({
   })
 }
 
-export const unlock = async ({
-  mainAccount,
-  mainAccountPass
-}: {
-  mainAccount: string;
-  mainAccountPass: string;
-}, web3: Web3) => {
+export const unlock = async (
+  {
+    mainAccount,
+    mainAccountPass
+  }: {
+    mainAccount: string;
+    mainAccountPass: string;
+  },
+  web3: Web3
+) => {
   return new Promise((resolve, reject) => {
     web3.personal
       ? web3.personal.unlockAccount(
@@ -73,21 +82,27 @@ export const unlock = async ({
   })
 }
 
-const Web3DeployContract = async ({
-  abi,
-  code,
-  mainAccount,
-  gas,
-  contractArguments
-}: {
-  abi: ContractAbi;
-  code: string;
-  mainAccount: string;
-  gas: number;
-  contractArguments: string | null | undefined;
-}, web3: Web3): Promise<{ abi?: ContractAbi; address?: string }> => {
+const Web3DeployContract = async (
+  {
+    abi,
+    code,
+    mainAccount,
+    gas,
+    contractArguments
+  }: {
+    abi: ContractAbi;
+    code: string;
+    mainAccount: string;
+    gas: number;
+    contractArguments: string | null | undefined;
+  },
+  web3: Web3
+): Promise<{
+  abi?: ContractAbi;
+  address?: string;
+  receipt?: TransactionReceipt;
+}> => {
   return new Promise((resolve, reject) => {
-
     if (contractArguments && contractArguments.length > 0) {
       web3.eth.contract(abi).new(
         ...contractArguments.split(','),
@@ -100,7 +115,10 @@ const Web3DeployContract = async ({
           if (err) {
             reject(err)
           } else if (contract && contract.address) {
-            resolve(contract)
+            resolve({
+              ...contract,
+              receipt: web3.eth.getTransactionReceipt(contract.transactionHash)
+            })
           }
         }
       )
@@ -123,28 +141,33 @@ const Web3DeployContract = async ({
   })
 }
 
-export const deploy = async ({
-  abi,
-  code,
-  mainAccount,
-  gas,
-  contractArguments
-}: {
-  abi: AbiDefinition[];
-  code: string;
-  mainAccount: string;
-  gas: number;
-  contractArguments: string | null | undefined;
-}, web3: Web3) => {
+export const deploy = async (
+  {
+    abi,
+    code,
+    mainAccount,
+    gas,
+    contractArguments
+  }: {
+    abi: AbiDefinition[];
+    code: string;
+    mainAccount: string;
+    gas: number;
+    contractArguments: string | null | undefined;
+  },
+  web3: Web3
+) => {
   try {
-    const deployedContract = await Web3DeployContract({
-      abi,
-      code,
-      mainAccount,
-      gas,
-      contractArguments
-    },web3)
-    console.log('Contract deployed at ', deployedContract.address)
+    const deployedContract = await Web3DeployContract(
+      {
+        abi,
+        code,
+        mainAccount,
+        gas,
+        contractArguments
+      },
+      web3
+    )
     return deployedContract
   } catch (e) {
     throw e
