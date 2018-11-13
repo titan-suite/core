@@ -2,8 +2,9 @@
   "compilerOptions": {
     "target": "es6",
     "declaration": true,
+    "module": "commonjs",
     "types": ["node"],
-    "outDir": "./dist", 
+    "outDir": "./dist",
     "strict": true,
     "lib": [
       /* Specify library files to be included in the compilation. */

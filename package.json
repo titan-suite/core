@@ -6,12 +6,16 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build": "cd aion && yarn && cd .. && tsc"
+    "build": "tsc"
   },
   "devDependencies": {
     "@types/node": "^10.9.4",
+    "ethereum-types": "^1.0.5",
+    "nodemon": "^1.18.3",
+    "prettier": "^1.15.2",
     "ts-node": "^7.0.0",
     "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.0.1"
   }
 }
