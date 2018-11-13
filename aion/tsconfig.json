@@ -3,7 +3,7 @@
     "target": "es6",
     "declaration": true,
     "types": ["node"],
-    "outDir": "./dist", 
+    "outDir": "./dist",
     "strict": true,
     "lib": [
       /* Specify library files to be included in the compilation. */
@@ -15,5 +15,6 @@
     ],
     "moduleResolution": "node",
     "esModuleInterop": true
-  }
+  },
+  "exclude": ["aion-web3"]
 }

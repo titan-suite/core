@@ -29,7 +29,7 @@ declare module 'aion-web3' {
     public version: Web3.VersionApi
     public net: Web3.NetApi
 
-    public constructor(provider?: Provider);
+    public constructor(provider?: Provider)
 
     public isConnected(): boolean
     public setProvider(provider: Provider): void
@@ -56,7 +56,7 @@ declare module 'aion-web3' {
         timeout?: number,
         username?: string,
         password?: string
-      );
+      )
       public sendAsync(
         payload: JSONRPCRequestPayload,
         callback: (err: Error, result: JSONRPCResponsePayload) => void
@@ -101,13 +101,11 @@ declare module 'aion-web3' {
         solidity(
           sourceString: string,
           cb?: (err: Error, result: any) => void
-        ): object;
+        ): object
       }
       getMining(cd: (err: Error, mining: boolean) => void): void
       getHashrate(cd: (err: Error, hashrate: number) => void): void
-      getGasPrice(
-        cd: (err: Error, gasPrice: BigNumber.BigNumber) => void
-      ): void
+      getGasPrice(cd: (err: Error, gasPrice: BigNumber.BigNumber) => void): void
       getAccounts(cd: (err: Error, accounts: string[]) => void): void
       getBlockNumber(callback: (err: Error, blockNumber: number) => void): void
       getSyncing(cd: (err: Error, syncing: Web3.SyncingResult) => void): void
@@ -295,6 +293,6 @@ declare module 'aion-web3' {
     }
   }
   /* tslint:disable */
-  export = Web3;
+  export = Web3
   /* tslint:enable */
 }

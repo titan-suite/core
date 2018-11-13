@@ -1,1 +1,1 @@
-export { default as aion } from './aion/dist'
+export { default as aion } from './aion/lib'

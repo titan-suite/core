@@ -7,7 +7,7 @@
   "scripts": {
     "start": "ts-node --files src/",
     "dev": "nodemon -e ts -w ./src -x npm run start",
-    "build": "rm -rf node_modules/@types/aion-web3 && yarn && cp aion-web3 node_modules/@types/ && tsc"
+    "build": "tsc"
   },
   "license": "Apache-2.0",
   "dependencies": {

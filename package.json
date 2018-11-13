@@ -6,8 +6,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "preinstall": "cd aion && yarn && npm run build && cd ..",
-    "build": "tsc"
+    "build": "cd aion && yarn && cd .. && tsc"
   },
   "devDependencies": {
     "@types/node": "^10.9.4",
