@@ -1,6 +1,10 @@
 {
   "defaultSeverity": "error",
-  "extends": ["tslint:latest", "tslint-config-prettier"],
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier",
+    "tslint-no-unused-expression-chai"
+  ],
   "jsRules": {},
   "rules": {
     "arrow-parens": false,
@@ -31,6 +35,5 @@
       "allow-trailing-underscore",
       "allow-pascal-case"
     ]
-  },
-  "rulesDirectory": []
+  }
 }

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "es6",
     "declaration": true,
     "module": "commonjs",
@@ -15,6 +16,10 @@
       "esnext.asynciterable"
     ],
     "moduleResolution": "node",
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "paths": {
+      "*": ["node_modules/*", "typings/*"]
+    }
+  },
+  "exclude": ["node_modules", "tests", "titanrc.ts"]
 }

@@ -6,16 +6,26 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build":"tsc"
+    "preinstall": "git clone https://github.com/aionnetwork/aion_web3 && cd aion_web3 && npm install --ignore-scripts && cd ..",
+    "build": "rm -rf dist && tsc",
+    "test": "mocha --require ts-node/register tests/**/*.ts"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
     "@types/node": "^10.9.4",
+    "aion-web3-core": "file:./aion_web3",
+    "chai": "^4.2.0",
     "ethereum-types": "^1.0.5",
+    "mocha": "^5.2.0",
     "nodemon": "^1.18.3",
     "prettier": "^1.15.2",
-    "ts-node": "^7.0.0",
+    "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
-    "typescript": "^3.0.1"
+    "tslint-no-unused-expression-chai": "^0.1.4",
+    "typescript": "^3.0.1",
+    "@types/bignumber.js": "^5.0.0",
+    "@types/underscore": "^1.8.9"
   }
 }

@@ -7,103 +7,69 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAccounts = (web3) => {
-    return new Promise((resolve, reject) => {
-        web3.eth.getAccounts((err, acc) => {
-            if (err) {
-                reject(err);
-            }
-            resolve(acc);
-        });
-    });
-};
-exports.getBalance = ({ address }, web3) => {
-    return new Promise((resolve, reject) => {
-        web3.eth.getBalance(address, (err, balance) => {
-            if (err) {
-                reject(err);
-            }
-            resolve(web3.fromWei(balance, 'ether'));
-        });
-    });
-};
-exports.compile = ({ contract }, web3) => __awaiter(this, void 0, void 0, function* () {
-    return new Promise((resolve, reject) => {
-        web3.eth.compile.solidity(contract, (err, res) => {
-            if (err) {
-                return reject(err);
-            }
-            if ('compile-error' in res) {
-                return reject(res['compile-error'].error);
-            }
-            if (res) {
-                return resolve(res);
-            }
-        });
-    });
-});
-exports.unlock = ({ mainAccount, mainAccountPass }, web3) => __awaiter(this, void 0, void 0, function* () {
-    return new Promise((resolve, reject) => {
-        web3.personal
-            ? web3.personal.unlockAccount(mainAccount, mainAccountPass, 999999, (err, isUnlocked) => {
-                if (err) {
-                    return reject(err);
-                }
-                else if (isUnlocked && isUnlocked === true) {
-                    return resolve(isUnlocked);
-                }
-                else {
-                    return reject('unlock failed');
-                }
+const aion_web3_core_1 = __importDefault(require("aion-web3-core"));
+class Aion {
+    constructor(providerUrl) {
+        this.getAccounts = () => __awaiter(this, void 0, void 0, function* () { return this.web3.eth.getAccounts(); });
+        this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () { return this.web3.utils.fromNAmp(yield this.web3.eth.getBalance(address), 'nAmp'); });
+        this.unlock = (address, password) => this.web3.eth.personal.unlockAccount(address, password);
+        this.deploy = ({ deployedAddress, abi, code, mainAccount, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+            let receipt;
+            let txHash;
+            let confirmation;
+            const contract = new this.web3.eth.Contract(abi, deployedAddress, {
+                from: mainAccount,
+                data: code,
+                gas
+            });
+            const newContractInstance = yield contract
+                .deploy({
+                data: code,
+                arguments: [...contractArguments.split(',')]
             })
-            : reject('Invalid Web3');
-    });
-});
-const Web3DeployContract = ({ abi, code, mainAccount, gas, contractArguments }, web3) => __awaiter(this, void 0, void 0, function* () {
-    return new Promise((resolve, reject) => {
-        if (contractArguments && contractArguments.length > 0) {
-            web3.eth.contract(abi).new(...contractArguments.split(','), {
+                .send({
+                from: mainAccount,
+                gas,
+                gasPrice
+            })
+                .on('receipt', _receipt => {
+                receipt = _receipt;
+            })
+                .on('error', error => {
+                throw error;
+            })
+                .on('transactionHash', _txHash => {
+                txHash = _txHash;
+            })
+                .on('confirmation', (confNumber, confReceipt) => {
+                confirmation = { confNumber, confReceipt };
+            });
+            return {
+                receipt,
+                txHash,
+                confirmation,
+                newContractInstance
+            };
+        });
+        this.estimateGas = ({ deployedAddress, abi, code, mainAccount, gas, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+            const contract = new this.web3.eth.Contract(abi, deployedAddress, {
                 from: mainAccount,
                 data: code,
                 gas
-            }, (err, contract) => {
-                if (err) {
-                    reject(err);
-                }
-                else if (contract && contract.address) {
-                    resolve(Object.assign({}, contract, { receipt: web3.eth.getTransactionReceipt(contract.transactionHash) }));
-                }
             });
-        }
-        else {
-            web3.eth.contract(abi).new({
-                from: mainAccount,
+            const estimatedGas = yield contract
+                .deploy({
                 data: code,
-                gas
-            }, (err, contract) => {
-                if (err) {
-                    reject(err);
-                }
-                else if (contract && contract.address) {
-                    resolve(Object.assign({}, contract, { receipt: web3.eth.getTransactionReceipt(contract.transactionHash) }));
-                }
-            });
-        }
-    });
-});
-exports.deploy = ({ abi, code, mainAccount, gas, contractArguments }, web3) => __awaiter(this, void 0, void 0, function* () {
-    try {
-        const deployedContract = yield Web3DeployContract({
-            abi,
-            code,
-            mainAccount,
-            gas,
-            contractArguments
-        }, web3);
-        return deployedContract;
+                arguments: [...contractArguments.split(',')]
+            })
+                .estimateGas();
+            return estimatedGas;
+        });
+        this.web3 = new aion_web3_core_1.default(new aion_web3_core_1.default.providers.HttpProvider(providerUrl));
     }
-    catch (e) {
-        throw e;
-    }
-});
+}
+exports.default = Aion;

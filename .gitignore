@@ -10,3 +10,6 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+titanrc.ts
+aion_web3/
