@@ -25,9 +25,8 @@
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "^3.0.1",
     "@types/bignumber.js": "^5.0.0",
-    "@types/underscore": "^1.8.9"
-  },
-  "dependencies": {
+    "@types/underscore": "^1.8.9",
     "aion-web3-core": "file:./aion_web3"
-  }
+  },
+  "dependencies": {}
 }
