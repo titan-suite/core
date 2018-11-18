@@ -8,7 +8,6 @@ describe('Get accounts , balances, unlocks the first account', () => {
   let accounts: string[]
   it('get all accounts', async () => {
     accounts = await aion.getAccounts()
-    console.log(accounts)
     expect(accounts)
       .to.be.an('array')
       .to.have.length.above(0)
@@ -18,19 +17,21 @@ describe('Get accounts , balances, unlocks the first account', () => {
   }).timeout(0)
 
   it('get balances for first account', async () => {
-    const wallet = await Promise.all(
-      [accounts[0]].map(async (account: any) => {
-        return {
-          account,
-          balance: await aion.getBalance(account)
-        }
+    let wallet: any = []
+    for (const account of accounts) {
+      const etherBalance = await aion.getBalance(account)
+      wallet.push({
+        account,
+        etherBalance
       })
-    )
+    }
     console.log(wallet)
     expect(wallet[0].account)
       .to.be.an('string')
       .to.have.lengthOf(66)
+    expect(wallet[0].etherBalance).to.be.a('number')
   }).timeout(0)
+
   it('successfully unlocks the first', async () => {
     const response = await aion.unlock(accounts[0], 'PLAT4life')
     console.log(response)

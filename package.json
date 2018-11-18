@@ -6,7 +6,6 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "preinstall": "rm -rf aion_web3 && git clone https://github.com/aionnetwork/aion_web3 && cd aion_web3 && npm install --ignore-scripts && cd ..",
     "build": "rm -rf dist && tsc",
     "test": "mocha --require ts-node/register tests/**/*.ts"
   },
@@ -23,10 +22,9 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "^3.0.1",
-    "@types/bignumber.js": "^5.0.0",
-    "@types/underscore": "^1.8.9",
-    "aion-web3-core": "file:./aion_web3"
+    "typescript": "^3.0.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "axios": "^0.18.0"
+  }
 }

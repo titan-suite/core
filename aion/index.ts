@@ -1,94 +1,102 @@
-import { AbiDefinition } from 'ethereum-types'
-import Web3 from 'aion-web3-core'
+import axios from 'axios'
+
 interface Deploy {
-  deployedAddress: string
-  abi: AbiDefinition[]
   code: string
   mainAccount: string
   gas: number
   gasPrice: number
-  contractArguments: string
+  contractArguments?: string
 }
 export default class Aion {
-  web3: Web3
-  constructor(providerUrl: string) {
-    this.web3 = new Web3(new Web3.providers.HttpProvider(providerUrl))
+  public nodeAddress: string
+
+  constructor(nodeAddress: string) {
+    this.nodeAddress = nodeAddress
   }
 
-  getAccounts = async () => this.web3.eth.getAccounts()
+  getAccounts = async (): Promise<string[]> => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_accounts',
+      params: [],
+      id: 1
+    })
+    return result
+  }
 
-  getBalance = async (address: string) =>
-    this.web3.utils.fromNAmp(await this.web3.eth.getBalance(address), 'nAmp')
-
-  unlock = (address: string, password: string) =>
-    this.web3.eth.personal.unlockAccount(address, password)
+  getBalance = async (address: string): Promise<number> => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_getBalance',
+      params: [address, 'latest'],
+      id: 1
+    })
+    return +result
+  }
+  unlock = async (address: string, password: string): Promise<boolean> => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'personal_unlockAccount',
+      params: [address, password],
+      id: 1
+    })
+    return result
+  }
 
   deploy = async ({
-    deployedAddress,
-    abi,
     code,
     mainAccount,
     gas,
     gasPrice,
     contractArguments
   }: Deploy) => {
-    let receipt
-    let txHash
-    let confirmation
-    const contract = new this.web3.eth.Contract(abi, deployedAddress, {
-      from: mainAccount,
-      data: code,
-      gas
+    const {
+      data: { result: txHash }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_sendTransaction',
+      params: [
+        {
+          from: mainAccount,
+          data: code,
+          gas,
+          gasPrice
+        }
+      ],
+      id: 1
     })
-    const newContractInstance = await contract
-      .deploy({
-        data: code,
-        arguments: [...contractArguments.split(',')]
-      })
-      .send({
-        from: mainAccount,
-        gas,
-        gasPrice
-      })
-      .on('receipt', _receipt => {
-        receipt = _receipt
-      })
-      .on('error', error => {
-        throw error
-      })
-      .on('transactionHash', _txHash => {
-        txHash = _txHash
-      })
-      .on('confirmation', (confNumber, confReceipt) => {
-        confirmation = { confNumber, confReceipt }
-      })
-    return {
-      receipt,
-      txHash,
-      confirmation,
-      newContractInstance
-    }
+    const {
+      data: { result: txReceipt }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_getTransactionReceipt',
+      params: [txHash],
+      id: 1
+    })
   }
 
-  estimateGas = async ({
-    deployedAddress,
-    abi,
-    code,
-    mainAccount,
-    gas,
-    contractArguments
-  }: Deploy) => {
-    const contract = new this.web3.eth.Contract(abi, deployedAddress, {
-      from: mainAccount,
-      data: code,
-      gas
+  estimateGas = async ({ code, mainAccount, gas, gasPrice }: Deploy) => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_estimateGas',
+      params: [
+        {
+          from: mainAccount,
+          data: code,
+          gas,
+          gasPrice
+        }
+      ],
+      id: 1
     })
-    const estimatedGas = await contract
-      .deploy({
-        data: code,
-        arguments: [...contractArguments.split(',')]
-      })
-      .estimateGas()
-    return estimatedGas
+    return result
   }
 }
