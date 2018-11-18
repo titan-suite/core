@@ -44,23 +44,6 @@ class Aion {
             });
             return +result;
         });
-        this.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
-            return utils.soliditySha3(input);
-        });
-        this.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
-            return utils.toHex(input);
-        });
-        this.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
-            return utils.hexToNumber(input);
-        });
-        this.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
-            return utils.padLeft(target, characterAmount, sign);
-        });
-        this.compile = (input) => __awaiter(this, void 0, void 0, function* () {
-            // TODO https://github.com/ethereum/solc-js/pull/205
-            const output = solc_1.default.compile(input, 1);
-            return output;
-        });
         this.unlock = (address, password) => __awaiter(this, void 0, void 0, function* () {
             const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
@@ -74,7 +57,7 @@ class Aion {
             let args = [];
             if (contractArguments) {
                 for (const arg of contractArguments.split(',')) {
-                    const hash = yield this.sha3(arg);
+                    const hash = yield Aion.sha3(arg);
                     const parsedHash = hash.substring(2, 10);
                     args.push(parsedHash);
                 }
@@ -140,7 +123,7 @@ class Aion {
                 ],
                 id: 1
             });
-            return this.hexToNumber(result);
+            return Aion.hexToNumber(result);
         });
         this.call = (params) => __awaiter(this, void 0, void 0, function* () {
             const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
@@ -154,4 +137,21 @@ class Aion {
         this.nodeAddress = nodeAddress;
     }
 }
+Aion.compile = (input) => __awaiter(this, void 0, void 0, function* () {
+    // TODO https://github.com/ethereum/solc-js/pull/205
+    const output = solc_1.default.compile(input, 1);
+    return output;
+});
+Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
+    return utils.soliditySha3(input);
+});
+Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
+    return utils.toHex(input);
+});
+Aion.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
+    return utils.hexToNumber(input);
+});
+Aion.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
+    return utils.padLeft(target, characterAmount, sign);
+});
 exports.default = Aion;

@@ -31,8 +31,33 @@ export interface CallParameters {
   data?: string
 }
 export default class Aion {
-  public nodeAddress: string
+  static compile = async (input: string): Promise<any> => {
+    // TODO https://github.com/ethereum/solc-js/pull/205
+    const output = solc.compile(input, 1)
+    return output
+  }
 
+  static sha3 = async (input: any) => {
+    return utils.soliditySha3(input)
+  }
+
+  static toHex = async (input: any): Promise<string> => {
+    return utils.toHex(input)
+  }
+
+  static hexToNumber = async (input: any): Promise<number> => {
+    return utils.hexToNumber(input)
+  }
+
+  static padLeft = async (
+    target: string,
+    characterAmount: number,
+    sign?: string
+  ): Promise<string> => {
+    return utils.padLeft(target, characterAmount, sign)
+  }
+
+  public nodeAddress: string
   constructor(nodeAddress: string) {
     this.nodeAddress = nodeAddress
   }
@@ -61,32 +86,6 @@ export default class Aion {
     return +result
   }
 
-  sha3 = async (input: any) => {
-    return utils.soliditySha3(input)
-  }
-
-  toHex = async (input: any): Promise<string> => {
-    return utils.toHex(input)
-  }
-
-  hexToNumber = async (input: any): Promise<number> => {
-    return utils.hexToNumber(input)
-  }
-
-  padLeft = async (
-    target: string,
-    characterAmount: number,
-    sign?: string
-  ): Promise<string> => {
-    return utils.padLeft(target, characterAmount, sign)
-  }
-
-  compile = async (input: string): Promise<any> => {
-    // TODO https://github.com/ethereum/solc-js/pull/205
-    const output = solc.compile(input, 1)
-    return output
-  }
-
   unlock = async (address: string, password: string): Promise<boolean> => {
     const {
       data: { result }
@@ -109,7 +108,7 @@ export default class Aion {
     let args = []
     if (contractArguments) {
       for (const arg of contractArguments.split(',')) {
-        const hash = await this.sha3(arg)
+        const hash = await Aion.sha3(arg)
         const parsedHash = hash.substring(2, 10)
         args.push(parsedHash)
       }
@@ -189,7 +188,7 @@ export default class Aion {
       ],
       id: 1
     })
-    return this.hexToNumber(result)
+    return Aion.hexToNumber(result)
   }
 
   call = async (params: CallParameters): Promise<any> => {

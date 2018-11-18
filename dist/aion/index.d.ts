@@ -24,15 +24,15 @@ export interface CallParameters {
     data?: string;
 }
 export default class Aion {
+    static compile: (input: string) => Promise<any>;
+    static sha3: (input: any) => Promise<any>;
+    static toHex: (input: any) => Promise<string>;
+    static hexToNumber: (input: any) => Promise<number>;
+    static padLeft: (target: string, characterAmount: number, sign?: string | undefined) => Promise<string>;
     nodeAddress: string;
     constructor(nodeAddress: string);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
-    sha3: (input: any) => Promise<any>;
-    toHex: (input: any) => Promise<string>;
-    hexToNumber: (input: any) => Promise<number>;
-    padLeft: (target: string, characterAmount: number, sign?: string | undefined) => Promise<string>;
-    compile: (input: string) => Promise<any>;
     unlock: (address: string, password: string) => Promise<boolean>;
     deploy: ({ bytecode, from, gas, gasPrice, contractArguments }: Deploy) => Promise<{
         txHash: string;

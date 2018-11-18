@@ -12,6 +12,7 @@
       "dom",
       "es5",
       "es6",
+      "es2017",
       "esnext",
       "esnext.asynciterable"
     ],
