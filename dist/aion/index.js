@@ -10,9 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 const solc_1 = __importDefault(require("solc"));
+const utils = __importStar(require("web3-utils"));
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
 class Aion {
     constructor(nodeAddress) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
@@ -34,13 +45,7 @@ class Aion {
             return +result;
         });
         this.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'web3_sha3',
-                params: [input],
-                id: 1
-            });
-            return result;
+            return utils.sha3(input);
         });
         this.compile = (input) => __awaiter(this, void 0, void 0, function* () {
             const output = solc_1.default.compile(input, 1);
@@ -56,25 +61,45 @@ class Aion {
             return result;
         });
         this.deploy = ({ code, mainAccount, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result: txHash } } = yield axios_1.default.post(this.nodeAddress, {
+            const txHash = yield this.sendTransaction({
+                from: mainAccount,
+                data: code,
+                gas,
+                gasPrice
+            });
+            const txReceipt = yield this.getReceiptWhenMined(txHash);
+            return { txHash, txReceipt };
+        });
+        this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
+            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_sendTransaction',
-                params: [
-                    {
-                        from: mainAccount,
-                        data: code,
-                        gas,
-                        gasPrice
-                    }
-                ],
+                params: [params],
                 id: 1
             });
-            const { data: { result: txReceipt } } = yield axios_1.default.post(this.nodeAddress, {
+            return result;
+        });
+        this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                while (true) {
+                    console.log('checking...');
+                    let receipt = yield this.getTxReceipt(txHash);
+                    if (receipt && receipt.contractAddress) {
+                        resolve(receipt);
+                        break;
+                    }
+                    yield sleep(3000);
+                }
+            }));
+        });
+        this.getTxReceipt = (txHash) => __awaiter(this, void 0, void 0, function* () {
+            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_getTransactionReceipt',
                 params: [txHash],
                 id: 1
             });
+            return result;
         });
         this.estimateGas = ({ code, mainAccount, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
             const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
