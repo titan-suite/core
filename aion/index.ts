@@ -7,8 +7,8 @@ const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 export interface Deploy {
-  data: string
-  mainAccount: string
+  bytecode: string
+  from: string
   gas?: number
   gasPrice?: number
   contractArguments?: string
@@ -21,6 +21,14 @@ export interface TxParameters {
   value?: number
   data: string
   nonce?: number
+}
+export interface CallParameters {
+  from: string
+  to: string
+  gas?: number
+  gasPrice?: number
+  value?: number
+  data?: string
 }
 export default class Aion {
   public nodeAddress: string
@@ -61,7 +69,20 @@ export default class Aion {
     return utils.toHex(input)
   }
 
+  hexToNumber = async (input: any): Promise<number> => {
+    return utils.hexToNumber(input)
+  }
+
+  padLeft = async (
+    target: string,
+    characterAmount: number,
+    sign?: string
+  ): Promise<string> => {
+    return utils.padLeft(target, characterAmount, sign)
+  }
+
   compile = async (input: string): Promise<any> => {
+    // TODO https://github.com/ethereum/solc-js/pull/205
     const output = solc.compile(input, 1)
     return output
   }
@@ -79,14 +100,23 @@ export default class Aion {
   }
 
   deploy = async ({
-    data,
-    mainAccount,
+    bytecode,
+    from,
     gas,
     gasPrice,
     contractArguments
   }: Deploy) => {
+    let args = []
+    if (contractArguments) {
+      for (const arg of contractArguments.split(',')) {
+        const hash = await this.sha3(arg)
+        const parsedHash = hash.substring(2, 10)
+        args.push(parsedHash)
+      }
+    }
+    const data = bytecode.concat(args.join(''))
     const txHash = await this.sendTransaction({
-      from: mainAccount,
+      from,
       data,
       gas,
       gasPrice
@@ -110,13 +140,18 @@ export default class Aion {
   getReceiptWhenMined = async (txHash: string) => {
     return new Promise(async (resolve, reject) => {
       while (true) {
-        console.log('checking...')
-        let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
-        if (receipt && receipt.contractAddress) {
-          resolve(receipt)
+        try {
+          console.log('checking...')
+          let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
+          if (receipt && receipt.contractAddress) {
+            resolve(receipt)
+            break
+          }
+          await sleep(3000)
+        } catch (e) {
+          reject(e)
           break
         }
-        await sleep(3000)
       }
     }) as Promise<TransactionReceipt>
   }
@@ -134,8 +169,8 @@ export default class Aion {
   }
 
   estimateGas = async ({
-    data,
-    mainAccount,
+    bytecode,
+    from,
     gas,
     gasPrice
   }: Deploy): Promise<any> => {
@@ -146,12 +181,24 @@ export default class Aion {
       method: 'eth_estimateGas',
       params: [
         {
-          from: mainAccount,
-          data,
+          from,
+          data: bytecode,
           gas,
           gasPrice
         }
       ],
+      id: 1
+    })
+    return this.hexToNumber(result)
+  }
+
+  call = async (params: CallParameters): Promise<any> => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_call',
+      params: [params, 'latest'],
       id: 1
     })
     return result
