@@ -1,4 +1,4 @@
-interface Deploy {
+export interface Deploy {
     code: string;
     mainAccount: string;
     gas: number;
@@ -14,4 +14,3 @@ export default class Aion {
     deploy: ({ code, mainAccount, gas, gasPrice, contractArguments }: Deploy) => Promise<void>;
     estimateGas: ({ code, mainAccount, gas, gasPrice }: Deploy) => Promise<any>;
 }
-export {};

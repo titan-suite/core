@@ -1,4 +1,4 @@
-import Aion from '../aion'
+import { Aion } from '../'
 import { expect } from 'chai'
 import 'mocha'
 import { nodeAddress } from '../titanrc'

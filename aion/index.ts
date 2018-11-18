@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-interface Deploy {
+export interface Deploy {
   code: string
   mainAccount: string
   gas: number
