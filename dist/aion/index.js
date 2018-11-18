@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
+const solc_1 = __importDefault(require("solc"));
 class Aion {
     constructor(nodeAddress) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
@@ -31,6 +32,19 @@ class Aion {
                 id: 1
             });
             return +result;
+        });
+        this.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
+            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+                jsonrpc: '2.0',
+                method: 'web3_sha3',
+                params: [input],
+                id: 1
+            });
+            return result;
+        });
+        this.compile = (input) => __awaiter(this, void 0, void 0, function* () {
+            const output = solc_1.default.compile(input, 1);
+            return output;
         });
         this.unlock = (address, password) => __awaiter(this, void 0, void 0, function* () {
             const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {

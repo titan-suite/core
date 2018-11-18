@@ -1,4 +1,4 @@
-import { Aion } from '../'
+import Aion from '../aion'
 import { expect } from 'chai'
 import 'mocha'
 import { nodeAddress } from '../titanrc'
@@ -6,6 +6,7 @@ const aion = new Aion(nodeAddress)
 
 describe('Get accounts , balances, unlocks the first account', () => {
   let accounts: string[]
+
   it('get all accounts', async () => {
     accounts = await aion.getAccounts()
     expect(accounts)
@@ -36,5 +37,12 @@ describe('Get accounts , balances, unlocks the first account', () => {
     const response = await aion.unlock(accounts[0], 'PLAT4life')
     console.log(response)
     expect(response).to.be.true
+  }).timeout(0)
+
+  it('successfully returns sha3 of input', async () => {
+    const signature = 'name()'
+    const response = await aion.sha3(signature)
+    console.log(response)
+    expect(response).to.not.equal('')
   }).timeout(0)
 })

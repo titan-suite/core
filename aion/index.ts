@@ -1,4 +1,6 @@
 import axios from 'axios'
+import solc from 'solc'
+import * as utils from 'web3-utils'
 
 export interface Deploy {
   code: string
@@ -37,6 +39,16 @@ export default class Aion {
     })
     return +result
   }
+
+  sha3 = async (input: string) => {
+    return utils.sha3(input)
+  }
+
+  compile = async (input: string): Promise<any> => {
+    const output = solc.compile(input, 1)
+    return output
+  }
+
   unlock = async (address: string, password: string): Promise<boolean> => {
     const {
       data: { result }
