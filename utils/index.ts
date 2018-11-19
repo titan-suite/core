@@ -17,6 +17,13 @@ export const rpcPost = async (
       params,
       id
     })
-    .then(({ data: { result } }) => result)
-    .catch(err => console.error(err))
+    .then(({ data: { result, error } }) => {
+      if (error) {
+        throw error
+      }
+      return result
+    })
+    .catch(error => {
+      throw error
+    })
 }

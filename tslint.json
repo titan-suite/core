@@ -24,6 +24,7 @@
     "member-access": false,
     "no-implicit-dependencies": false,
     "no-namespace": true,
-    "no-invalid-template-strings": true
+    "no-invalid-template-strings": true,
+    "no-var-requires": false
   }
 }

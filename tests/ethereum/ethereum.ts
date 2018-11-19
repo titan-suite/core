@@ -2,44 +2,45 @@ import fs from 'fs'
 import path from 'path'
 import 'mocha'
 import { expect } from 'chai'
+import solc from 'solc'
 
 import { nodeAddress } from '../../titanrc'
 import * as web3Utils from 'web3-utils'
 
-import Aion from '../../aion'
-const aion = new Aion(nodeAddress.aion)
+import Ethereum from '../../ethereum'
+const ethereum = new Ethereum(nodeAddress.ethereum)
 const ExampleContract = {
   sol: fs.readFileSync(
     path.resolve(__dirname, 'contracts', 'Example.sol'),
     'utf8'
   ),
-  name: 'Example'
+  name: ':Example'
 }
 const WithConstructorContract = {
   sol: fs.readFileSync(
     path.resolve(__dirname, 'contracts', 'WithConstructor.sol'),
     'utf8'
   ),
-  name: 'WithConstructor'
+  name: ':WithConstructor'
 }
 
-describe('Test AION class methods', () => {
+describe('Test Ethereum class methods', () => {
   let accounts: string[]
   let deployedContractAddress: string
   it('get all accounts', async () => {
-    accounts = await aion.getAccounts()
+    accounts = await ethereum.getAccounts()
     expect(accounts)
       .to.be.an('array')
       .to.have.length.above(0)
     expect(accounts[0])
       .to.be.an('string')
-      .to.have.lengthOf(66)
+      .to.have.lengthOf(42)
   }).timeout(0)
 
   it('get balances for first account', async () => {
     let wallet: any = []
     for (const account of accounts) {
-      const etherBalance = await aion.getBalance(account)
+      const etherBalance = await ethereum.getBalance(account)
       wallet.push({
         account,
         etherBalance
@@ -47,13 +48,8 @@ describe('Test AION class methods', () => {
     }
     expect(wallet[0].account)
       .to.be.an('string')
-      .to.have.lengthOf(66)
+      .to.have.lengthOf(42)
     expect(wallet[0].etherBalance).to.be.a('number')
-  }).timeout(0)
-
-  it('successfully unlocks the first account', async () => {
-    const response = await aion.unlock(accounts[0], 'PLAT4life')
-    expect(response).to.be.true
   }).timeout(0)
 
   it('successfully returns sha3 of a input', async () => {
@@ -67,9 +63,9 @@ describe('Test AION class methods', () => {
   it('successfully compiles a contract and estimates gas', async () => {
     const sol =
       'pragma solidity ^0.4.9; contract Demo { address owner; function Demo() public {} }'
-    const response = await aion.compile(sol)
-    const bytecode = response['Demo'].code
-    const estimatedGas = await aion.estimateGas({
+    const response = await solc.compile(sol, 1)
+    const bytecode = response.contracts[':Demo'].bytecode
+    const estimatedGas = await ethereum.estimateGas({
       bytecode,
       from: accounts[0],
       gas: 2000000
@@ -81,9 +77,9 @@ describe('Test AION class methods', () => {
   }).timeout(0)
 
   it('successfully deploys the Example contract', async () => {
-    const compiled = await aion.compile(ExampleContract.sol)
-    const bytecode = compiled[ExampleContract.name].code
-    const res = await aion.deploy({
+    const compiled = await solc.compile(ExampleContract.sol)
+    const bytecode = compiled.contracts[ExampleContract.name].bytecode
+    const res = await ethereum.deploy({
       bytecode,
       from: accounts[0],
       gas: 2000000
@@ -96,10 +92,10 @@ describe('Test AION class methods', () => {
   }).timeout(0)
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
-    const compiled = await aion.compile(WithConstructorContract.sol)
-    const bytecode = compiled[WithConstructorContract.name].code
+    const compiled = await solc.compile(WithConstructorContract.sol)
+    const bytecode = compiled.contracts[WithConstructorContract.name].bytecode
 
-    const res = await aion.deploy({
+    const res = await ethereum.deploy({
       bytecode,
       from: accounts[0],
       contractArguments: '15,Titan',
@@ -117,7 +113,7 @@ describe('Test AION class methods', () => {
     let funcHash = await web3Utils.soliditySha3('add(uint128)')
     const paddedValue = await web3Utils.padLeft('5', 64)
     funcHash = funcHash.substring(0, 10) + paddedValue
-    let res = await aion.call({
+    let res = await ethereum.call({
       from: accounts[0],
       to: deployedContractAddress,
       data: funcHash

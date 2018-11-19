@@ -26,16 +26,11 @@ export interface CallParameters {
   value?: number
   data?: string
 }
-export default class Aion {
+export default class Ethereum {
   public nodeAddress: string
   constructor(nodeAddress: string) {
     this.nodeAddress = nodeAddress
   }
-  // public static compile = async (input: string): Promise<any> => {
-  //   // TODO https://github.com/ethereum/solc-js/pull/205
-  //   // const output = solc.compile(input, 1)
-  //   // return output
-  // }
 
   getAccounts = async (): Promise<string[]> => {
     return rpcPost(this.nodeAddress, 'eth_accounts')
@@ -46,17 +41,6 @@ export default class Aion {
       address,
       'latest'
     ]).then(balance => Number(web3Utils.fromWei(balance)))
-  }
-
-  compile = async (contract: string): Promise<{ [key: string]: any }> => {
-    return rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract])
-  }
-
-  unlock = async (address: string, password: string): Promise<boolean> => {
-    return rpcPost(this.nodeAddress, 'personal_unlockAccount', [
-      address,
-      password
-    ])
   }
 
   call = async (params: CallParameters) => {
@@ -100,7 +84,7 @@ export default class Aion {
     txReceipt: TransactionReceipt;
     txHash: string;
   }> => {
-    if (!from || from.length !== 66) {
+    if (!from || from.length !== 42) {
       throw new Error('Invalid Account')
     }
     let args = []
