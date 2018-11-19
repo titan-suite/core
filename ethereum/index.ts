@@ -42,7 +42,9 @@ export default class Ethereum {
       'latest'
     ]).then(balance => Number(web3Utils.fromWei(balance)))
   }
-
+  compile = async (address: string): Promise<any> => {
+    throw new Error('Compiler not setup for ethereum')
+  }
   call = async (params: CallParameters) => {
     return rpcPost(this.nodeAddress, 'eth_call', [params, 'latest'])
   }

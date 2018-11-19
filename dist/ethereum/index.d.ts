@@ -28,6 +28,7 @@ export default class Ethereum {
     constructor(nodeAddress: string);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
+    compile: (address: string) => Promise<any>;
     call: (params: CallParameters) => Promise<any>;
     sendTransaction: (params: TxParameters) => Promise<string>;
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;

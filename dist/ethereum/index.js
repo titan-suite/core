@@ -29,6 +29,9 @@ class Ethereum {
                 'latest'
             ]).then(balance => Number(web3Utils.fromWei(balance)));
         });
+        this.compile = (address) => __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Compiler not setup for ethereum');
+        });
         this.call = (params) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params, 'latest']);
         });
