@@ -102,7 +102,7 @@ describe('Test AION class methods', () => {
     const res = await aion.deploy({
       bytecode,
       from: accounts[0],
-      contractArguments: '15,Titan',
+      contractArguments: '15',
       gas: 2000000
     })
     if (res) {
@@ -113,18 +113,32 @@ describe('Test AION class methods', () => {
     }
   }).timeout(0)
 
-  it('gets back 20 after sending 5 to contract', async () => {
-    let funcHash = await web3Utils.soliditySha3('add(uint128)')
-    const paddedValue = await web3Utils.padLeft('5', 64)
-    funcHash = funcHash.substring(0, 10) + paddedValue
+  it('gets back the value of num', async () => {
+    let funcHash = await web3Utils.soliditySha3('getNum()')
+    funcHash = funcHash.substring(0, 10)
     let res = await aion.call({
       from: accounts[0],
       to: deployedContractAddress,
       data: funcHash
     })
-    console.log(res)
-    res = await web3Utils.fromWei(res) // TODO
-    console.log({ deployedContractAddress, funcHash, res })
-    expect(res).to.equal(20)
+
+    res = await web3Utils.hexToNumber(res)
+    expect(res).to.equal(16)
+  }).timeout(0)
+
+  it('gets back 20 after adding 5 to num', async () => {
+    const funcHash = await web3Utils.soliditySha3('add(uint128)')
+    const param = web3Utils.toHex(12).substring(2)
+    const paddedParam = await web3Utils.padLeft(param, 32)
+    const data = funcHash.substring(0, 10) + paddedParam
+
+    let res = await aion.call({
+      from: accounts[0],
+      to: deployedContractAddress,
+      data
+    })
+
+    res = await web3Utils.hexToNumber(res)
+    expect(res).to.equal(27)
   }).timeout(0)
 })

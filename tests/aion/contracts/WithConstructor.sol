@@ -9,12 +9,20 @@ contract WithConstructor {
         return num + a;
     }
 
-    function WithConstructor(uint128 a, bytes32 br) public {
+    function WithConstructor(uint128 a) public {
         num = a;
     }
 
     function setA(uint128 a) public {
         num = a;
         NumChanged(num);
+    }
+
+    function getNum() public returns(uint128) {
+        return num+1;
+    }
+
+    function double(int a) constant returns(int) { 
+        return 2 * a;
     }
 }
