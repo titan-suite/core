@@ -31,14 +31,21 @@ export interface CallParameters {
   data?: string
 }
 export default class Aion {
-  public static compile = async (input: string): Promise<any> => {
-    // TODO https://github.com/ethereum/solc-js/pull/205
-    // const output = solc.compile(input, 1)
-    // return output
-  }
+  // public static compile = async (input: string): Promise<any> => {
+  //   // TODO https://github.com/ethereum/solc-js/pull/205
+  //   // const output = solc.compile(input, 1)
+  //   // return output
+  // }
 
   public static sha3 = async (input: any) => {
     return utils.soliditySha3(input)
+  }
+
+  public static fromWei = async (input: string | number) => {
+    return utils.fromWei(input)
+  }
+  public static toWei = async (input: string | number) => {
+    return utils.toWei(input)
   }
 
   public static toHex = async (input: any): Promise<string> => {
@@ -62,6 +69,17 @@ export default class Aion {
     this.nodeAddress = nodeAddress
   }
 
+  compile = async (contract: string): Promise<{ [key: string]: any }> => {
+    const {
+      data: { result }
+    } = await axios.post(this.nodeAddress, {
+      jsonrpc: '2.0',
+      method: 'eth_compileSolidity',
+      params: [contract],
+      id: 1
+    })
+    return result
+  }
   getAccounts = async (): Promise<string[]> => {
     const {
       data: { result }

@@ -10,14 +10,14 @@ const ExampleContract = {
     path.resolve(__dirname, 'contracts', 'Example.sol'),
     'utf8'
   ),
-  name: ':Example'
+  name: 'Example'
 }
 const WithConstructorContract = {
   sol: fs.readFileSync(
     path.resolve(__dirname, 'contracts', 'WithConstructor.sol'),
     'utf8'
   ),
-  name: ':WithConstructor'
+  name: 'WithConstructor'
 }
 
 describe('Test AION class methods', () => {
@@ -64,22 +64,22 @@ describe('Test AION class methods', () => {
   it('successfully compiles a contract and estimates gas', async () => {
     const sol =
       'pragma solidity ^0.4.9; contract Demo { address owner; function Demo() public {} }'
-    const response = await Aion.compile(sol)
-    const bytecode = response.contracts[':Demo'].bytecode
+    const response = await aion.compile(sol)
+    // const bytecode = response.contracts[':Demo'].bytecode
+    const bytecode = response['Demo'].code
     const estimatedGas = await aion.estimateGas({
       bytecode,
       from: accounts[0],
       gas: 2000000
     })
-    expect(estimatedGas)
-      .be.a('number')
-      .to.equal(225982)
+    expect(estimatedGas).be.a('number')
     expect(bytecode).to.be.an('string')
   }).timeout(0)
 
   it('successfully deploys the Example contract', async () => {
-    const compiled = await Aion.compile(ExampleContract.sol)
-    const bytecode = compiled.contracts[ExampleContract.name].bytecode
+    const compiled = await aion.compile(ExampleContract.sol)
+    const bytecode = compiled[ExampleContract.name].code
+    // const bytecode = compiled.contracts[ExampleContract.name].bytecode
     const res = await aion.deploy({
       bytecode,
       from: accounts[0],
@@ -89,8 +89,8 @@ describe('Test AION class methods', () => {
   }).timeout(0)
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
-    const compiled = await Aion.compile(WithConstructorContract.sol)
-    const bytecode = compiled.contracts[WithConstructorContract.name].bytecode
+    const compiled = await aion.compile(WithConstructorContract.sol)
+    const bytecode = compiled[WithConstructorContract.name].code
 
     const res = await aion.deploy({
       bytecode,
@@ -112,7 +112,7 @@ describe('Test AION class methods', () => {
       data: funcHash
     })
     console.log(res)
-    res = await Aion.hexToNumber(res)
+    res = await Aion.fromWei(res) // TODO
     console.log({ deployedContractAddress, funcHash, res })
     expect(res).to.equal(20)
   }).timeout(0)
