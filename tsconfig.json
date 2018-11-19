@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "es2017",
+    "target": "es6",
     "declaration": true,
     "module": "commonjs",
     "types": ["node"],

@@ -32,19 +32,19 @@ export default class Aion {
     static padLeft: (target: string, characterAmount: number, sign?: string | undefined) => Promise<string>;
     nodeAddress: string;
     constructor(nodeAddress: string);
+    getAccounts: () => Promise<string[]>;
+    getBalance: (address: string) => Promise<number>;
     compile: (contract: string) => Promise<{
         [key: string]: any;
     }>;
-    getAccounts: () => Promise<string[]>;
-    getBalance: (address: string) => Promise<number>;
     unlock: (address: string, password: string) => Promise<boolean>;
+    call: (params: CallParameters) => Promise<any>;
+    sendTransaction: (params: TxParameters) => Promise<string>;
+    getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
+    getReceiptWhenMined: (txHash: string) => Promise<TransactionReceipt>;
     deploy: ({ bytecode, from, gas, gasPrice, contractArguments }: Deploy) => Promise<{
         txHash: string;
         txReceipt: TransactionReceipt;
     }>;
-    sendTransaction: (params: TxParameters) => Promise<string>;
-    getReceiptWhenMined: (txHash: string) => Promise<TransactionReceipt>;
-    getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
-    estimateGas: ({ bytecode, from, gas, gasPrice }: Deploy) => Promise<any>;
-    call: (params: CallParameters) => Promise<any>;
+    estimateGas: ({ bytecode, from, gas, gasPrice }: Deploy) => Promise<number>;
 }

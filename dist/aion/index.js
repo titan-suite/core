@@ -1,6 +1,11 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
@@ -10,127 +15,84 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
 // import solc from 'solc'
 const utils = __importStar(require("web3-utils"));
-const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-};
+const utils_1 = require("../utils");
 class Aion {
     constructor(nodeAddress) {
-        this.compile = async (contract) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_compileSolidity',
-                params: [contract],
-                id: 1
-            });
-            return result;
-        };
-        this.getAccounts = async () => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_accounts',
-                params: [],
-                id: 1
-            });
-            return result;
-        };
-        this.getBalance = async (address) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_getBalance',
-                params: [address, 'latest'],
-                id: 1
-            });
-            return +Aion.fromWei(result);
-        };
-        this.unlock = async (address, password) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'personal_unlockAccount',
-                params: [address, password],
-                id: 1
-            });
-            return result;
-        };
-        this.deploy = async ({ bytecode, from, gas, gasPrice, contractArguments }) => {
-            let args = [];
-            if (contractArguments) {
-                for (const arg of contractArguments.split(',')) {
-                    const hash = await Aion.sha3(arg);
-                    const parsedHash = hash.substring(2, 10);
-                    args.push(parsedHash);
-                }
-            }
-            const data = bytecode.concat(args.join(''));
-            const txHash = await this.sendTransaction({
-                from,
-                data,
-                gas,
-                gasPrice
-            });
-            const txReceipt = await this.getReceiptWhenMined(txHash);
-            return { txHash, txReceipt };
-        };
-        this.sendTransaction = async (params) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_sendTransaction',
-                params: [params],
-                id: 1
-            });
-            return result;
-        };
-        this.getReceiptWhenMined = async (txHash) => {
+        this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'eth_accounts');
+        });
+        this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
+            const balance = yield utils_1.rpcPost(this.nodeAddress, 'eth_getBalance', [
+                address,
+                'latest'
+            ]);
+            return +Aion.fromWei(balance);
+        });
+        this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract]);
+        });
+        this.unlock = (address, password) => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'personal_unlockAccount', [
+                address,
+                password
+            ]);
+        });
+        this.call = (params) => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params, 'latest']);
+        });
+        this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'eth_sendTransaction', [params]);
+        });
+        this.getTxReceipt = (txHash) => __awaiter(this, void 0, void 0, function* () {
+            return utils_1.rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash]);
+        });
+        this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
             while (true) {
                 try {
                     console.log('checking...');
-                    let receipt = await this.getTxReceipt(txHash);
+                    let receipt = yield this.getTxReceipt(txHash);
                     if (receipt && receipt.contractAddress) {
                         return receipt;
                     }
-                    await sleep(3000);
+                    yield utils_1.sleep(3000);
                 }
                 catch (e) {
                     throw e;
                 }
             }
-        };
-        this.getTxReceipt = async (txHash) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_getTransactionReceipt',
-                params: [txHash],
-                id: 1
+        });
+        this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+            let args = [];
+            if (contractArguments) {
+                for (const arg of contractArguments.split(',')) {
+                    const hash = yield Aion.sha3(arg);
+                    const parsedHash = hash.substring(2, 10);
+                    args.push(parsedHash);
+                }
+            }
+            const data = bytecode.concat(args.join(''));
+            const txHash = yield this.sendTransaction({
+                from,
+                data,
+                gas,
+                gasPrice
             });
-            return result;
-        };
-        this.estimateGas = async ({ bytecode, from, gas, gasPrice }) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_estimateGas',
-                params: [
-                    {
-                        from,
-                        data: bytecode,
-                        gas,
-                        gasPrice
-                    }
-                ],
-                id: 1
-            });
-            return Aion.hexToNumber(result);
-        };
-        this.call = async (params) => {
-            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
-                jsonrpc: '2.0',
-                method: 'eth_call',
-                params: [params, 'latest'],
-                id: 1
-            });
-            return result;
-        };
+            const txReceipt = yield this.getReceiptWhenMined(txHash);
+            return { txHash, txReceipt };
+        });
+        this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
+            const estimatedGas = yield utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
+                {
+                    from,
+                    data: bytecode,
+                    gas,
+                    gasPrice
+                }
+            ]);
+            return +Aion.hexToNumber(estimatedGas);
+        });
         this.nodeAddress = nodeAddress;
     }
 }
@@ -139,22 +101,22 @@ class Aion {
 //   // const output = solc.compile(input, 1)
 //   // return output
 // }
-Aion.sha3 = async (input) => {
+Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.soliditySha3(input);
-};
-Aion.fromWei = async (input) => {
+});
+Aion.fromWei = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.fromWei(input);
-};
-Aion.toWei = async (input) => {
+});
+Aion.toWei = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.toWei(input);
-};
-Aion.toHex = async (input) => {
+});
+Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.toHex(input);
-};
-Aion.hexToNumber = async (input) => {
+});
+Aion.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.hexToNumber(input);
-};
-Aion.padLeft = async (target, characterAmount, sign) => {
+});
+Aion.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
     return utils.padLeft(target, characterAmount, sign);
-};
+});
 exports.default = Aion;

@@ -1,11 +1,7 @@
-import axios from 'axios'
 // import solc from 'solc'
 import * as utils from 'web3-utils'
-
 import { TransactionReceipt } from 'ethereum-types'
-const sleep = (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+import { sleep, rpcPost } from '../utils'
 export interface Deploy {
   bytecode: string
   from: string
@@ -69,51 +65,54 @@ export default class Aion {
     this.nodeAddress = nodeAddress
   }
 
-  compile = async (contract: string): Promise<{ [key: string]: any }> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_compileSolidity',
-      params: [contract],
-      id: 1
-    })
-    return result
-  }
   getAccounts = async (): Promise<string[]> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_accounts',
-      params: [],
-      id: 1
-    })
-    return result
+    return rpcPost(this.nodeAddress, 'eth_accounts')
   }
 
   getBalance = async (address: string): Promise<number> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_getBalance',
-      params: [address, 'latest'],
-      id: 1
-    })
-    return +Aion.fromWei(result)
+    const balance = await rpcPost(this.nodeAddress, 'eth_getBalance', [
+      address,
+      'latest'
+    ])
+    return +Aion.fromWei(balance)
+  }
+
+  compile = async (contract: string): Promise<{ [key: string]: any }> => {
+    return rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract])
   }
 
   unlock = async (address: string, password: string): Promise<boolean> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'personal_unlockAccount',
-      params: [address, password],
-      id: 1
-    })
-    return result
+    return rpcPost(this.nodeAddress, 'personal_unlockAccount', [
+      address,
+      password
+    ])
+  }
+
+  call = async (params: CallParameters) => {
+    return rpcPost(this.nodeAddress, 'eth_call', [params, 'latest'])
+  }
+
+  sendTransaction = async (params: TxParameters): Promise<string> => {
+    return rpcPost(this.nodeAddress, 'eth_sendTransaction', [params])
+  }
+
+  getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
+    return rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash])
+  }
+
+  getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
+    while (true) {
+      try {
+        console.log('checking...')
+        let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
+        if (receipt && receipt.contractAddress) {
+          return receipt
+        }
+        await sleep(3000)
+      } catch (e) {
+        throw e
+      }
+    }
   }
 
   deploy = async ({
@@ -142,78 +141,20 @@ export default class Aion {
     return { txHash, txReceipt }
   }
 
-  sendTransaction = async (params: TxParameters): Promise<string> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_sendTransaction',
-      params: [params],
-      id: 1
-    })
-    return result
-  }
-
-  getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
-    while (true) {
-      try {
-        console.log('checking...')
-        let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
-        if (receipt && receipt.contractAddress) {
-          return receipt
-        }
-        await sleep(3000)
-      } catch (e) {
-        throw e
-      }
-    }
-  }
-
-  getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_getTransactionReceipt',
-      params: [txHash],
-      id: 1
-    })
-    return result
-  }
-
   estimateGas = async ({
     bytecode,
     from,
     gas,
     gasPrice
-  }: Deploy): Promise<any> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_estimateGas',
-      params: [
-        {
-          from,
-          data: bytecode,
-          gas,
-          gasPrice
-        }
-      ],
-      id: 1
-    })
-    return Aion.hexToNumber(result)
-  }
-
-  call = async (params: CallParameters): Promise<any> => {
-    const {
-      data: { result }
-    } = await axios.post(this.nodeAddress, {
-      jsonrpc: '2.0',
-      method: 'eth_call',
-      params: [params, 'latest'],
-      id: 1
-    })
-    return result
+  }: Deploy): Promise<number> => {
+    const estimatedGas = await rpcPost(this.nodeAddress, 'eth_estimateGas', [
+      {
+        from,
+        data: bytecode,
+        gas,
+        gasPrice
+      }
+    ])
+    return +Aion.hexToNumber(estimatedGas)
   }
 }
