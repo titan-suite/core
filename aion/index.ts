@@ -60,7 +60,7 @@ export default class Aion {
   }
 
   call = async (params: CallParameters) => {
-    return rpcPost(this.nodeAddress, 'eth_call', [params, 'latest'])
+    return rpcPost(this.nodeAddress, 'eth_call', [params])
   }
 
   sendTransaction = async (params: TxParameters): Promise<string> => {
@@ -106,8 +106,8 @@ export default class Aion {
     let args = []
     if (contractArguments) {
       for (const arg of contractArguments.split(',')) {
-        const hash = web3Utils.soliditySha3(arg)
-        const parsedHash = hash.substring(2, 10)
+        const hash = web3Utils.toHex(arg)
+        const parsedHash = web3Utils.padLeft(hash.substring(2), 32)
         args.push(parsedHash)
       }
     }
