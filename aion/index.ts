@@ -100,7 +100,9 @@ export default class Aion {
   }
 
   getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
-    while (true) {
+    const maxTries = 15
+    let tries = 0
+    while (tries < maxTries) {
       try {
         console.log('checking...')
         let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
@@ -108,10 +110,12 @@ export default class Aion {
           return receipt
         }
         await sleep(3000)
+        tries++
       } catch (e) {
         throw e
       }
     }
+    throw new Error('Request timed out')
   }
 
   deploy = async ({
@@ -136,21 +140,17 @@ export default class Aion {
       }
     }
     const data = bytecode.concat(args.join(''))
-    let txHash: string
-    return this.sendTransaction({
+    let txHash: string = await this.sendTransaction({
       from,
       data,
       gas,
       gasPrice
     })
-      .then(TxHash => {
-        console.log(TxHash)
-        txHash = TxHash
-        return this.getReceiptWhenMined(txHash)
-      })
-      .then(txReceipt => {
-        return { txReceipt, txHash }
-      })
+    if (!txHash) {
+      throw new Error('Transaction Failed')
+    }
+    const txReceipt = await this.getReceiptWhenMined(txHash)
+    return { txReceipt, txHash }
   }
 
   estimateGas = async ({

@@ -48,7 +48,9 @@ class Aion {
             return utils_1.rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash]);
         });
         this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            while (true) {
+            const maxTries = 15;
+            let tries = 0;
+            while (tries < maxTries) {
                 try {
                     console.log('checking...');
                     let receipt = yield this.getTxReceipt(txHash);
@@ -56,11 +58,13 @@ class Aion {
                         return receipt;
                     }
                     yield utils_1.sleep(3000);
+                    tries++;
                 }
                 catch (e) {
                     throw e;
                 }
             }
+            throw new Error('Request timed out');
         });
         this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
             if (!from || from.length !== 66) {
@@ -75,21 +79,17 @@ class Aion {
                 }
             }
             const data = bytecode.concat(args.join(''));
-            let txHash;
-            return this.sendTransaction({
+            let txHash = yield this.sendTransaction({
                 from,
                 data,
                 gas,
                 gasPrice
-            })
-                .then(TxHash => {
-                console.log(TxHash);
-                txHash = TxHash;
-                return this.getReceiptWhenMined(txHash);
-            })
-                .then(txReceipt => {
-                return { txReceipt, txHash };
             });
+            if (!txHash) {
+                throw new Error('Transaction Failed');
+            }
+            const txReceipt = yield this.getReceiptWhenMined(txHash);
+            return { txReceipt, txHash };
         });
         this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
