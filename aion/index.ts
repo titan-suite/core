@@ -1,5 +1,5 @@
 import axios from 'axios'
-import solc from 'solc'
+// import solc from 'solc'
 import * as utils from 'web3-utils'
 
 import { TransactionReceipt } from 'ethereum-types'
@@ -33,8 +33,8 @@ export interface CallParameters {
 export default class Aion {
   public static compile = async (input: string): Promise<any> => {
     // TODO https://github.com/ethereum/solc-js/pull/205
-    const output = solc.compile(input, 1)
-    return output
+    // const output = solc.compile(input, 1)
+    // return output
   }
 
   public static sha3 = async (input: any) => {

@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
-const solc_1 = __importDefault(require("solc"));
+// import solc from 'solc'
 const utils = __importStar(require("web3-utils"));
 const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -139,8 +139,8 @@ class Aion {
 }
 Aion.compile = (input) => __awaiter(this, void 0, void 0, function* () {
     // TODO https://github.com/ethereum/solc-js/pull/205
-    const output = solc_1.default.compile(input, 1);
-    return output;
+    // const output = solc.compile(input, 1)
+    // return output
 });
 Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.soliditySha3(input);
