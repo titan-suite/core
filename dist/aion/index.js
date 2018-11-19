@@ -28,7 +28,7 @@ class Aion {
                 address,
                 'latest'
             ]);
-            return +Aion.fromWei(balance);
+            return Aion.fromWei(balance);
         });
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract]);
@@ -91,7 +91,7 @@ class Aion {
                     gasPrice
                 }
             ]);
-            return +Aion.hexToNumber(estimatedGas);
+            return Aion.hexToNumber(estimatedGas);
         });
         this.nodeAddress = nodeAddress;
     }
@@ -105,7 +105,7 @@ Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.soliditySha3(input);
 });
 Aion.fromWei = (input) => __awaiter(this, void 0, void 0, function* () {
-    return utils.fromWei(input);
+    return Number(yield utils.fromWei(input));
 });
 Aion.toWei = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.toWei(input);
@@ -114,7 +114,7 @@ Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.toHex(input);
 });
 Aion.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
-    return utils.hexToNumber(input);
+    return Number(yield utils.hexToNumber(input));
 });
 Aion.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
     return utils.padLeft(target, characterAmount, sign);

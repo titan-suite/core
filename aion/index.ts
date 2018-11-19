@@ -37,8 +37,8 @@ export default class Aion {
     return utils.soliditySha3(input)
   }
 
-  public static fromWei = async (input: string | number) => {
-    return utils.fromWei(input)
+  public static fromWei = async (input: string | number): Promise<number> => {
+    return Number(await utils.fromWei(input))
   }
   public static toWei = async (input: string | number) => {
     return utils.toWei(input)
@@ -49,7 +49,7 @@ export default class Aion {
   }
 
   public static hexToNumber = async (input: any): Promise<number> => {
-    return utils.hexToNumber(input)
+    return Number(await utils.hexToNumber(input))
   }
 
   public static padLeft = async (
@@ -74,7 +74,7 @@ export default class Aion {
       address,
       'latest'
     ])
-    return +Aion.fromWei(balance)
+    return Aion.fromWei(balance)
   }
 
   compile = async (contract: string): Promise<{ [key: string]: any }> => {
@@ -155,6 +155,6 @@ export default class Aion {
         gasPrice
       }
     ])
-    return +Aion.hexToNumber(estimatedGas)
+    return Aion.hexToNumber(estimatedGas)
   }
 }

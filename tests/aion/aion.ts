@@ -72,7 +72,9 @@ describe('Test AION class methods', () => {
       from: accounts[0],
       gas: 2000000
     })
-    expect(estimatedGas).be.a('number')
+    expect(estimatedGas)
+      .be.a('number')
+      .to.be.greaterThan(20000)
     expect(bytecode).to.be.an('string')
   }).timeout(0)
 

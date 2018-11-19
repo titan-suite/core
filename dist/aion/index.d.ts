@@ -25,7 +25,7 @@ export interface CallParameters {
 }
 export default class Aion {
     static sha3: (input: any) => Promise<any>;
-    static fromWei: (input: string | number) => Promise<any>;
+    static fromWei: (input: string | number) => Promise<number>;
     static toWei: (input: string | number) => Promise<any>;
     static toHex: (input: any) => Promise<string>;
     static hexToNumber: (input: any) => Promise<number>;
