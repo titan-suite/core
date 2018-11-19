@@ -33,30 +33,30 @@ export default class Aion {
   //   // return output
   // }
 
-  public static sha3 = async (input: any) => {
+  public static sha3 = (input: any) => {
     return utils.soliditySha3(input)
   }
 
-  public static fromWei = async (input: string | number): Promise<number> => {
-    return Number(await utils.fromWei(input))
+  public static fromWei = (input: string | number): number => {
+    return Number(utils.fromWei(input))
   }
-  public static toWei = async (input: string | number) => {
+  public static toWei = (input: string | number) => {
     return utils.toWei(input)
   }
 
-  public static toHex = async (input: any): Promise<string> => {
+  public static toHex = (input: any): string => {
     return utils.toHex(input)
   }
 
-  public static hexToNumber = async (input: any): Promise<number> => {
-    return Number(await utils.hexToNumber(input))
+  public static hexToNumber = (input: any): number => {
+    return Number(utils.hexToNumber(input))
   }
 
-  public static padLeft = async (
+  public static padLeft = (
     target: string,
     characterAmount: number,
     sign?: string
-  ): Promise<string> => {
+  ): string => {
     return utils.padLeft(target, characterAmount, sign)
   }
 
@@ -70,11 +70,10 @@ export default class Aion {
   }
 
   getBalance = async (address: string): Promise<number> => {
-    const balance = await rpcPost(this.nodeAddress, 'eth_getBalance', [
+    return rpcPost(this.nodeAddress, 'eth_getBalance', [
       address,
       'latest'
-    ])
-    return Aion.fromWei(balance)
+    ]).then(balance => Aion.fromWei(balance))
   }
 
   compile = async (contract: string): Promise<{ [key: string]: any }> => {
@@ -121,24 +120,37 @@ export default class Aion {
     gas,
     gasPrice,
     contractArguments
-  }: Deploy) => {
+  }: Deploy): Promise<{
+    txReceipt: TransactionReceipt;
+    txHash: string;
+  }> => {
+    if (!from || from.length !== 66) {
+      throw new Error('Invalid Account')
+    }
     let args = []
     if (contractArguments) {
       for (const arg of contractArguments.split(',')) {
-        const hash = await Aion.sha3(arg)
+        const hash = Aion.sha3(arg)
         const parsedHash = hash.substring(2, 10)
         args.push(parsedHash)
       }
     }
     const data = bytecode.concat(args.join(''))
-    const txHash = await this.sendTransaction({
+    let txHash: string
+    return this.sendTransaction({
       from,
       data,
       gas,
       gasPrice
     })
-    const txReceipt = await this.getReceiptWhenMined(txHash)
-    return { txHash, txReceipt }
+      .then(TxHash => {
+        console.log(TxHash)
+        txHash = TxHash
+        return this.getReceiptWhenMined(txHash)
+      })
+      .then(txReceipt => {
+        return { txReceipt, txHash }
+      })
   }
 
   estimateGas = async ({
@@ -147,14 +159,13 @@ export default class Aion {
     gas,
     gasPrice
   }: Deploy): Promise<number> => {
-    const estimatedGas = await rpcPost(this.nodeAddress, 'eth_estimateGas', [
+    return rpcPost(this.nodeAddress, 'eth_estimateGas', [
       {
         from,
         data: bytecode,
         gas,
         gasPrice
       }
-    ])
-    return Aion.hexToNumber(estimatedGas)
+    ]).then(estimatedGas => Aion.hexToNumber(estimatedGas))
   }
 }

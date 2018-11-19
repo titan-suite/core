@@ -24,11 +24,10 @@ class Aion {
             return utils_1.rpcPost(this.nodeAddress, 'eth_accounts');
         });
         this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
-            const balance = yield utils_1.rpcPost(this.nodeAddress, 'eth_getBalance', [
+            return utils_1.rpcPost(this.nodeAddress, 'eth_getBalance', [
                 address,
                 'latest'
-            ]);
-            return Aion.fromWei(balance);
+            ]).then(balance => Aion.fromWei(balance));
         });
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract]);
@@ -64,34 +63,43 @@ class Aion {
             }
         });
         this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+            if (!from || from.length !== 66) {
+                throw new Error('Invalid Account');
+            }
             let args = [];
             if (contractArguments) {
                 for (const arg of contractArguments.split(',')) {
-                    const hash = yield Aion.sha3(arg);
+                    const hash = Aion.sha3(arg);
                     const parsedHash = hash.substring(2, 10);
                     args.push(parsedHash);
                 }
             }
             const data = bytecode.concat(args.join(''));
-            const txHash = yield this.sendTransaction({
+            let txHash;
+            return this.sendTransaction({
                 from,
                 data,
                 gas,
                 gasPrice
+            })
+                .then(TxHash => {
+                console.log(TxHash);
+                txHash = TxHash;
+                return this.getReceiptWhenMined(txHash);
+            })
+                .then(txReceipt => {
+                return { txReceipt, txHash };
             });
-            const txReceipt = yield this.getReceiptWhenMined(txHash);
-            return { txHash, txReceipt };
         });
         this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
-            const estimatedGas = yield utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
+            return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
                 {
                     from,
                     data: bytecode,
                     gas,
                     gasPrice
                 }
-            ]);
-            return Aion.hexToNumber(estimatedGas);
+            ]).then(estimatedGas => Aion.hexToNumber(estimatedGas));
         });
         this.nodeAddress = nodeAddress;
     }
@@ -101,22 +109,22 @@ class Aion {
 //   // const output = solc.compile(input, 1)
 //   // return output
 // }
-Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
+Aion.sha3 = (input) => {
     return utils.soliditySha3(input);
-});
-Aion.fromWei = (input) => __awaiter(this, void 0, void 0, function* () {
-    return Number(yield utils.fromWei(input));
-});
-Aion.toWei = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.fromWei = (input) => {
+    return Number(utils.fromWei(input));
+};
+Aion.toWei = (input) => {
     return utils.toWei(input);
-});
-Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.toHex = (input) => {
     return utils.toHex(input);
-});
-Aion.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
-    return Number(yield utils.hexToNumber(input));
-});
-Aion.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.hexToNumber = (input) => {
+    return Number(utils.hexToNumber(input));
+};
+Aion.padLeft = (target, characterAmount, sign) => {
     return utils.padLeft(target, characterAmount, sign);
-});
+};
 exports.default = Aion;

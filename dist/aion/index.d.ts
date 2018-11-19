@@ -24,12 +24,12 @@ export interface CallParameters {
     data?: string;
 }
 export default class Aion {
-    static sha3: (input: any) => Promise<any>;
-    static fromWei: (input: string | number) => Promise<number>;
-    static toWei: (input: string | number) => Promise<any>;
-    static toHex: (input: any) => Promise<string>;
-    static hexToNumber: (input: any) => Promise<number>;
-    static padLeft: (target: string, characterAmount: number, sign?: string | undefined) => Promise<string>;
+    static sha3: (input: any) => any;
+    static fromWei: (input: string | number) => number;
+    static toWei: (input: string | number) => any;
+    static toHex: (input: any) => string;
+    static hexToNumber: (input: any) => number;
+    static padLeft: (target: string, characterAmount: number, sign?: string | undefined) => string;
     nodeAddress: string;
     constructor(nodeAddress: string);
     getAccounts: () => Promise<string[]>;
@@ -43,8 +43,8 @@ export default class Aion {
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
     getReceiptWhenMined: (txHash: string) => Promise<TransactionReceipt>;
     deploy: ({ bytecode, from, gas, gasPrice, contractArguments }: Deploy) => Promise<{
-        txHash: string;
         txReceipt: TransactionReceipt;
+        txHash: string;
     }>;
     estimateGas: ({ bytecode, from, gas, gasPrice }: Deploy) => Promise<number>;
 }

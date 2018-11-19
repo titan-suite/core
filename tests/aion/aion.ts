@@ -87,7 +87,11 @@ describe('Test AION class methods', () => {
       from: accounts[0],
       gas: 2000000
     })
-    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
+    if (res) {
+      expect(res.txReceipt.transactionHash).to.equal(res.txHash)
+    } else {
+      throw new Error('Failed to deploy')
+    }
   }).timeout(0)
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
@@ -100,8 +104,12 @@ describe('Test AION class methods', () => {
       contractArguments: '15,Titan',
       gas: 2000000
     })
-    deployedContractAddress = res.txReceipt.contractAddress as string
-    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
+    if (res) {
+      deployedContractAddress = res.txReceipt.contractAddress as string
+      expect(res.txReceipt.transactionHash).to.equal(res.txHash)
+    } else {
+      throw new Error('Failed to deploy')
+    }
   }).timeout(0)
 
   it('gets back 20 after sending 5 to contract', async () => {
