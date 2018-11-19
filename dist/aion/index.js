@@ -26,6 +26,15 @@ const sleep = (ms) => {
 };
 class Aion {
     constructor(nodeAddress) {
+        this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
+            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+                jsonrpc: '2.0',
+                method: 'eth_compileSolidity',
+                params: [contract],
+                id: 1
+            });
+            return result;
+        });
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
             const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
@@ -137,13 +146,19 @@ class Aion {
         this.nodeAddress = nodeAddress;
     }
 }
-Aion.compile = (input) => __awaiter(this, void 0, void 0, function* () {
-    // TODO https://github.com/ethereum/solc-js/pull/205
-    // const output = solc.compile(input, 1)
-    // return output
-});
+// public static compile = async (input: string): Promise<any> => {
+//   // TODO https://github.com/ethereum/solc-js/pull/205
+//   // const output = solc.compile(input, 1)
+//   // return output
+// }
 Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.soliditySha3(input);
+});
+Aion.fromWei = (input) => __awaiter(this, void 0, void 0, function* () {
+    return utils.fromWei(input);
+});
+Aion.toWei = (input) => __awaiter(this, void 0, void 0, function* () {
+    return utils.toWei(input);
 });
 Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
     return utils.toHex(input);

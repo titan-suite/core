@@ -24,13 +24,17 @@ export interface CallParameters {
     data?: string;
 }
 export default class Aion {
-    static compile: (input: string) => Promise<any>;
     static sha3: (input: any) => Promise<any>;
+    static fromWei: (input: string | number) => Promise<any>;
+    static toWei: (input: string | number) => Promise<any>;
     static toHex: (input: any) => Promise<string>;
     static hexToNumber: (input: any) => Promise<number>;
     static padLeft: (target: string, characterAmount: number, sign?: string | undefined) => Promise<string>;
     nodeAddress: string;
     constructor(nodeAddress: string);
+    compile: (contract: string) => Promise<{
+        [key: string]: any;
+    }>;
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     unlock: (address: string, password: string) => Promise<boolean>;
