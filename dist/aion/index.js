@@ -48,7 +48,7 @@ class Aion {
             return utils_1.rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash]);
         });
         this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            const maxTries = 15;
+            const maxTries = 20;
             let tries = 0;
             while (tries < maxTries) {
                 try {
@@ -79,17 +79,24 @@ class Aion {
                 }
             }
             const data = bytecode.concat(args.join(''));
-            let txHash = yield this.sendTransaction({
+            let txHash;
+            return this.sendTransaction({
                 from,
                 data,
                 gas,
                 gasPrice
+            })
+                .then(TxHash => {
+                console.log({ TxHash });
+                txHash = TxHash;
+                if (!txHash) {
+                    throw new Error('Transaction Failed');
+                }
+                return this.getReceiptWhenMined(txHash);
+            })
+                .then(txReceipt => {
+                return { txReceipt, txHash };
             });
-            if (!txHash) {
-                throw new Error('Transaction Failed');
-            }
-            const txReceipt = yield this.getReceiptWhenMined(txHash);
-            return { txReceipt, txHash };
         });
         this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [

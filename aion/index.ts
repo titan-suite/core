@@ -100,7 +100,7 @@ export default class Aion {
   }
 
   getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
-    const maxTries = 15
+    const maxTries = 20
     let tries = 0
     while (tries < maxTries) {
       try {
@@ -140,17 +140,24 @@ export default class Aion {
       }
     }
     const data = bytecode.concat(args.join(''))
-    let txHash: string = await this.sendTransaction({
+    let txHash: string
+    return this.sendTransaction({
       from,
       data,
       gas,
       gasPrice
     })
-    if (!txHash) {
-      throw new Error('Transaction Failed')
-    }
-    const txReceipt = await this.getReceiptWhenMined(txHash)
-    return { txReceipt, txHash }
+      .then(TxHash => {
+        console.log({ TxHash })
+        txHash = TxHash
+        if (!txHash) {
+          throw new Error('Transaction Failed')
+        }
+        return this.getReceiptWhenMined(txHash)
+      })
+      .then(txReceipt => {
+        return { txReceipt, txHash }
+      })
   }
 
   estimateGas = async ({
