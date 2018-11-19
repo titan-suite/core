@@ -31,25 +31,25 @@ export interface CallParameters {
   data?: string
 }
 export default class Aion {
-  static compile = async (input: string): Promise<any> => {
+  public static compile = async (input: string): Promise<any> => {
     // TODO https://github.com/ethereum/solc-js/pull/205
     const output = solc.compile(input, 1)
     return output
   }
 
-  static sha3 = async (input: any) => {
+  public static sha3 = async (input: any) => {
     return utils.soliditySha3(input)
   }
 
-  static toHex = async (input: any): Promise<string> => {
+  public static toHex = async (input: any): Promise<string> => {
     return utils.toHex(input)
   }
 
-  static hexToNumber = async (input: any): Promise<number> => {
+  public static hexToNumber = async (input: any): Promise<number> => {
     return utils.hexToNumber(input)
   }
 
-  static padLeft = async (
+  public static padLeft = async (
     target: string,
     characterAmount: number,
     sign?: string
