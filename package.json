@@ -7,7 +7,9 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "mocha --require ts-node/register tests/**/*.ts"
+    "test": "mocha --require ts-node/register tests/**/*.ts",
+    "ethereum": "mocha --require ts-node/register tests/ethereum/*.ts",
+    "aion": "mocha --require ts-node/register tests/aion/*.ts"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
