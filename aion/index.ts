@@ -101,7 +101,7 @@ export default class Aion {
       params: [address, 'latest'],
       id: 1
     })
-    return +result
+    return +Aion.fromWei(result)
   }
 
   unlock = async (address: string, password: string): Promise<boolean> => {
@@ -154,23 +154,19 @@ export default class Aion {
     return result
   }
 
-  getReceiptWhenMined = async (txHash: string) => {
-    return new Promise(async (resolve, reject) => {
-      while (true) {
-        try {
-          console.log('checking...')
-          let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
-          if (receipt && receipt.contractAddress) {
-            resolve(receipt)
-            break
-          }
-          await sleep(3000)
-        } catch (e) {
-          reject(e)
-          break
+  getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
+    while (true) {
+      try {
+        console.log('checking...')
+        let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
+        if (receipt && receipt.contractAddress) {
+          return receipt
         }
+        await sleep(3000)
+      } catch (e) {
+        throw e
       }
-    }) as Promise<TransactionReceipt>
+    }
   }
 
   getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {

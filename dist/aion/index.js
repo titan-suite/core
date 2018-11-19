@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -26,100 +18,96 @@ const sleep = (ms) => {
 };
 class Aion {
     constructor(nodeAddress) {
-        this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        this.compile = async (contract) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_compileSolidity',
                 params: [contract],
                 id: 1
             });
             return result;
-        });
-        this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        };
+        this.getAccounts = async () => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_accounts',
                 params: [],
                 id: 1
             });
             return result;
-        });
-        this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        };
+        this.getBalance = async (address) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_getBalance',
                 params: [address, 'latest'],
                 id: 1
             });
-            return +result;
-        });
-        this.unlock = (address, password) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+            return +Aion.fromWei(result);
+        };
+        this.unlock = async (address, password) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'personal_unlockAccount',
                 params: [address, password],
                 id: 1
             });
             return result;
-        });
-        this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+        };
+        this.deploy = async ({ bytecode, from, gas, gasPrice, contractArguments }) => {
             let args = [];
             if (contractArguments) {
                 for (const arg of contractArguments.split(',')) {
-                    const hash = yield Aion.sha3(arg);
+                    const hash = await Aion.sha3(arg);
                     const parsedHash = hash.substring(2, 10);
                     args.push(parsedHash);
                 }
             }
             const data = bytecode.concat(args.join(''));
-            const txHash = yield this.sendTransaction({
+            const txHash = await this.sendTransaction({
                 from,
                 data,
                 gas,
                 gasPrice
             });
-            const txReceipt = yield this.getReceiptWhenMined(txHash);
+            const txReceipt = await this.getReceiptWhenMined(txHash);
             return { txHash, txReceipt };
-        });
-        this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        };
+        this.sendTransaction = async (params) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_sendTransaction',
                 params: [params],
                 id: 1
             });
             return result;
-        });
-        this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                while (true) {
-                    try {
-                        console.log('checking...');
-                        let receipt = yield this.getTxReceipt(txHash);
-                        if (receipt && receipt.contractAddress) {
-                            resolve(receipt);
-                            break;
-                        }
-                        yield sleep(3000);
+        };
+        this.getReceiptWhenMined = async (txHash) => {
+            while (true) {
+                try {
+                    console.log('checking...');
+                    let receipt = await this.getTxReceipt(txHash);
+                    if (receipt && receipt.contractAddress) {
+                        return receipt;
                     }
-                    catch (e) {
-                        reject(e);
-                        break;
-                    }
+                    await sleep(3000);
                 }
-            }));
-        });
-        this.getTxReceipt = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+                catch (e) {
+                    throw e;
+                }
+            }
+        };
+        this.getTxReceipt = async (txHash) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_getTransactionReceipt',
                 params: [txHash],
                 id: 1
             });
             return result;
-        });
-        this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        };
+        this.estimateGas = async ({ bytecode, from, gas, gasPrice }) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_estimateGas',
                 params: [
@@ -133,16 +121,16 @@ class Aion {
                 id: 1
             });
             return Aion.hexToNumber(result);
-        });
-        this.call = (params) => __awaiter(this, void 0, void 0, function* () {
-            const { data: { result } } = yield axios_1.default.post(this.nodeAddress, {
+        };
+        this.call = async (params) => {
+            const { data: { result } } = await axios_1.default.post(this.nodeAddress, {
                 jsonrpc: '2.0',
                 method: 'eth_call',
                 params: [params, 'latest'],
                 id: 1
             });
             return result;
-        });
+        };
         this.nodeAddress = nodeAddress;
     }
 }
@@ -151,22 +139,22 @@ class Aion {
 //   // const output = solc.compile(input, 1)
 //   // return output
 // }
-Aion.sha3 = (input) => __awaiter(this, void 0, void 0, function* () {
+Aion.sha3 = async (input) => {
     return utils.soliditySha3(input);
-});
-Aion.fromWei = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.fromWei = async (input) => {
     return utils.fromWei(input);
-});
-Aion.toWei = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.toWei = async (input) => {
     return utils.toWei(input);
-});
-Aion.toHex = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.toHex = async (input) => {
     return utils.toHex(input);
-});
-Aion.hexToNumber = (input) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.hexToNumber = async (input) => {
     return utils.hexToNumber(input);
-});
-Aion.padLeft = (target, characterAmount, sign) => __awaiter(this, void 0, void 0, function* () {
+};
+Aion.padLeft = async (target, characterAmount, sign) => {
     return utils.padLeft(target, characterAmount, sign);
-});
+};
 exports.default = Aion;

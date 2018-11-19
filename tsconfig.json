@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "es6",
+    "target": "es2017",
     "declaration": true,
     "module": "commonjs",
     "types": ["node"],
@@ -12,6 +12,7 @@
       "dom",
       "es5",
       "es6",
+      "es2017",
       "esnext",
       "esnext.asynciterable"
     ],
