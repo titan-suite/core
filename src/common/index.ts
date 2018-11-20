@@ -18,12 +18,13 @@ export interface CallParameters {
   value?: number
   data?: string
 }
-export interface Deploy {
+export interface Execute {
   bytecode: string
   from: string
   gas?: number
   gasPrice?: number
-  contractArguments?: string
+  parameters?: any[]
+  padLength?: number
 }
 
 export default class Common {
@@ -57,6 +58,7 @@ export default class Common {
     }
     return accounts
   }
+
   call = async (params: CallParameters) => {
     return rpcPost(this.nodeAddress, 'eth_call', [params])
   }
@@ -93,16 +95,15 @@ export default class Common {
     from,
     gas,
     gasPrice,
-    contractArguments
-  }: Deploy): Promise<{
+    parameters,
+    padLength
+  }: Execute): Promise<{
     txReceipt: TransactionReceipt;
     txHash: string;
   }> => {
     let args = []
-    if (contractArguments) {
-      args = contractArguments
-        .split(',')
-        .map(arg => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), 32))
+    if (parameters && padLength) {
+      args = this.convertParams(parameters, padLength)
     }
     const data = bytecode.concat(args.join(''))
     const txHash: string = await this.sendTransaction({
@@ -114,23 +115,37 @@ export default class Common {
     if (!txHash) {
       throw new Error('Transaction Failed')
     }
-    console.log({ txHash })
     const txReceipt = await this.getReceiptWhenMined(txHash)
     return { txReceipt, txHash }
   }
+
   estimateGas = async ({
     bytecode,
     from,
     gas,
-    gasPrice
-  }: Deploy): Promise<number> => {
+    gasPrice,
+    parameters,
+    padLength
+  }: Execute): Promise<number> => {
+    let args = []
+    if (parameters && padLength) {
+      args = this.convertParams(parameters, padLength)
+    }
+    const data = bytecode.concat(args.join(''))
     return rpcPost(this.nodeAddress, 'eth_estimateGas', [
       {
         from,
-        data: bytecode,
+        data,
         gas,
         gasPrice
       }
     ]).then(estimatedGas => Number(web3Utils.hexToNumber(estimatedGas)))
+  }
+
+  convertParams = (params: any[], length: number) => {
+    let res = params.map((arg: any) =>
+      web3Utils.padLeft(web3Utils.toHex(arg).substring(2), length)
+    )
+    return res
   }
 }

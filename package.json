@@ -8,8 +8,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "test": "mocha --require ts-node/register tests/**/*.ts",
-    "ethereum": "mocha --require ts-node/register tests/ethereum/*.ts",
-    "aion": "mocha --require ts-node/register tests/aion/*.ts"
+    "test:ethereum": "mocha --require ts-node/register tests/ethereum/*.ts",
+    "test:aion": "mocha --require ts-node/register tests/aion/*.ts"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

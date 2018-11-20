@@ -55,13 +55,16 @@ describe('Test Ethereum class methods', () => {
 
   it('successfully compiles a contract and estimates gas', async () => {
     const sol =
-      'pragma solidity ^0.4.9; contract Demo { address owner; function Demo() public {} }'
+      'pragma solidity ^0.4.9; contract Demo { address owner; uint public test; function Demo(uint t) public { owner = msg.sender; test = t; } }'
     const response = await solc.compile(sol, 1)
     const bytecode = response.contracts[':Demo'].bytecode
+
     const estimatedGas = await ethereum.estimateGas({
       bytecode,
       from: accounts[0],
-      gas: 2000000
+      gas: 2000000,
+      parameters: ['15'],
+      padLength: 64
     })
     expect(estimatedGas)
       .be.a('number')
@@ -91,8 +94,9 @@ describe('Test Ethereum class methods', () => {
     const res = await ethereum.deploy({
       bytecode,
       from: accounts[0],
-      contractArguments: '15,Titan',
-      gas: 2000000
+      gas: 2000000,
+      parameters: [15, 'Titan'],
+      padLength: 64
     })
     if (res) {
       deployedContractAddress = res.txReceipt.contractAddress as string
@@ -102,18 +106,30 @@ describe('Test Ethereum class methods', () => {
     }
   }).timeout(0)
 
-  it('gets back 20 after sending 5 to contract', async () => {
-    let funcHash = await web3Utils.soliditySha3('add(uint128)')
-    const paddedValue = await web3Utils.padLeft('5', 64)
-    funcHash = funcHash.substring(0, 10) + paddedValue
+  it('gets back the value of data', async () => {
+    let funcHash = await web3Utils.soliditySha3('getData()')
+    funcHash = funcHash.substring(0, 10)
     let res = await ethereum.call({
       from: accounts[0],
       to: deployedContractAddress,
       data: funcHash
     })
-    console.log(res)
-    res = await web3Utils.fromWei(res) // TODO
-    console.log({ deployedContractAddress, funcHash, res })
-    expect(res).to.equal(20)
+    res = await web3Utils.hexToUtf8(res)
+    expect(res).to.equal('Titan')
+  }).timeout(0)
+
+  it('gets back 27 after adding 12 to num', async () => {
+    const funcHash = await web3Utils.soliditySha3('add(uint256)')
+    const param = web3Utils.numberToHex(12).substring(2)
+    const paddedParam = await web3Utils.leftPad(param, 64, '0')
+    const data = funcHash.substring(0, 10) + paddedParam
+
+    let res = await ethereum.call({
+      from: accounts[0],
+      to: deployedContractAddress,
+      data
+    })
+    res = await web3Utils.hexToNumber(res)
+    expect(res).to.equal(27)
   }).timeout(0)
 })

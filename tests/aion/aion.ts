@@ -59,7 +59,7 @@ describe('Test AION class methods', () => {
 
   it('successfully compiles a contract and estimates gas', async () => {
     const sol =
-      'pragma solidity ^0.4.9; contract Demo { address owner; function Demo() public {} }'
+      'pragma solidity ^0.4.9; contract Demo { address owner; uint public test; function Demo(uint t) public { owner = msg.sender; test = t; } }'
     const response = await aion.compile(sol)
     const bytecode = response['Demo'].code
     const estimatedGas = await aion.estimateGas({
@@ -79,7 +79,9 @@ describe('Test AION class methods', () => {
     const res = await aion.deploy({
       bytecode,
       from: accounts[0],
-      gas: 2000000
+      gas: 2000000,
+      parameters: ['15'],
+      padLength: 32
     })
     if (res) {
       expect(res.txReceipt.transactionHash).to.equal(res.txHash)
@@ -95,8 +97,9 @@ describe('Test AION class methods', () => {
     const res = await aion.deploy({
       bytecode,
       from: accounts[0],
-      contractArguments: '15',
-      gas: 2000000
+      gas: 2000000,
+      parameters: ['15'],
+      padLength: 32
     })
     if (res) {
       deployedContractAddress = res.txReceipt.contractAddress as string
@@ -119,10 +122,10 @@ describe('Test AION class methods', () => {
     expect(res).to.equal(16)
   }).timeout(0)
 
-  it('gets back 20 after adding 5 to num', async () => {
+  it('gets back 27 after adding 12 to num', async () => {
     const funcHash = await web3Utils.soliditySha3('add(uint128)')
-    const param = web3Utils.toHex(12).substring(2)
-    const paddedParam = await web3Utils.padLeft(param, 32)
+    const param = web3Utils.numberToHex(12).substring(2)
+    const paddedParam = await web3Utils.leftPad(param, 32, '0')
     const data = funcHash.substring(0, 10) + paddedParam
 
     let res = await aion.call({
