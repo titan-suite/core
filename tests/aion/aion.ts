@@ -6,7 +6,7 @@ import { expect } from 'chai'
 import { nodeAddress } from '../../titanrc'
 import * as web3Utils from 'web3-utils'
 
-import Aion from '../../aion'
+import Aion from '../../src/blockchains/aion'
 const aion = new Aion(nodeAddress.aion)
 const ExampleContract = {
   sol: fs.readFileSync(
@@ -36,15 +36,8 @@ describe('Test AION class methods', () => {
       .to.have.lengthOf(66)
   }).timeout(0)
 
-  it('get balances for first account', async () => {
-    let wallet: any = []
-    for (const account of accounts) {
-      const etherBalance = await aion.getBalance(account)
-      wallet.push({
-        account,
-        etherBalance
-      })
-    }
+  it('get balances for all account', async () => {
+    const wallet = await aion.getBalancesWithAccounts()
     expect(wallet[0].account)
       .to.be.an('string')
       .to.have.lengthOf(66)

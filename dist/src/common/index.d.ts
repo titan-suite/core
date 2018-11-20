@@ -1,11 +1,4 @@
 import { TransactionReceipt } from 'ethereum-types';
-export interface Deploy {
-    bytecode: string;
-    from: string;
-    gas?: number;
-    gasPrice?: number;
-    contractArguments?: string;
-}
 export interface TxParameters {
     from: string;
     to?: string;
@@ -23,15 +16,22 @@ export interface CallParameters {
     value?: number;
     data?: string;
 }
-export default class Aion {
+export interface Deploy {
+    bytecode: string;
+    from: string;
+    gas?: number;
+    gasPrice?: number;
+    contractArguments?: string;
+}
+export default class Common {
     nodeAddress: string;
     constructor(nodeAddress: string);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
-    compile: (contract: string) => Promise<{
-        [key: string]: any;
-    }>;
-    unlock: (address: string, password: string) => Promise<boolean>;
+    getBalancesWithAccounts: () => Promise<{
+        account: string;
+        etherBalance: number;
+    }[]>;
     call: (params: CallParameters) => Promise<any>;
     sendTransaction: (params: TxParameters) => Promise<string>;
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;

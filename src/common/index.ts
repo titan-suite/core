@@ -1,14 +1,6 @@
-// import solc from 'solc'
 import * as web3Utils from 'web3-utils'
 import { TransactionReceipt } from 'ethereum-types'
-import { sleep, rpcPost } from '../utils'
-export interface Deploy {
-  bytecode: string
-  from: string
-  gas?: number
-  gasPrice?: number
-  contractArguments?: string
-}
+import { sleep, rpcPost } from '../../utils'
 export interface TxParameters {
   from: string
   to?: string
@@ -26,7 +18,15 @@ export interface CallParameters {
   value?: number
   data?: string
 }
-export default class Ethereum {
+export interface Deploy {
+  bytecode: string
+  from: string
+  gas?: number
+  gasPrice?: number
+  contractArguments?: string
+}
+
+export default class Common {
   public nodeAddress: string
   constructor(nodeAddress: string) {
     this.nodeAddress = nodeAddress
@@ -42,11 +42,22 @@ export default class Ethereum {
       'latest'
     ]).then(balance => Number(web3Utils.fromWei(balance)))
   }
-  compile = async (address: string): Promise<any> => {
-    throw new Error('Compiler not setup for ethereum')
+
+  getBalancesWithAccounts = async (): Promise<
+    Array<{ account: string; etherBalance: number }>
+  > => {
+    const accounts = await this.getAccounts()
+    return Promise.all(
+      accounts.map(async account => {
+        return new Promise(async resolve => {
+          const etherBalance = await this.getBalance(account)
+          return resolve({ account, etherBalance })
+        }) as Promise<{ account: string; etherBalance: number }>
+      })
+    )
   }
   call = async (params: CallParameters) => {
-    return rpcPost(this.nodeAddress, 'eth_call', [params, 'latest'])
+    return rpcPost(this.nodeAddress, 'eth_call', [params])
   }
 
   sendTransaction = async (params: TxParameters): Promise<string> => {
@@ -86,38 +97,26 @@ export default class Ethereum {
     txReceipt: TransactionReceipt;
     txHash: string;
   }> => {
-    if (!from || from.length !== 42) {
-      throw new Error('Invalid Account')
-    }
     let args = []
     if (contractArguments) {
-      for (const arg of contractArguments.split(',')) {
-        const hash = web3Utils.soliditySha3(arg)
-        const parsedHash = hash.substring(2, 10)
-        args.push(parsedHash)
-      }
+      args = contractArguments
+        .split(',')
+        .map(arg => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), 32))
     }
     const data = bytecode.concat(args.join(''))
-    let txHash: string
-    return this.sendTransaction({
+    const txHash: string = await this.sendTransaction({
       from,
       data,
       gas,
       gasPrice
     })
-      .then(TxHash => {
-        console.log({ TxHash })
-        txHash = TxHash
-        if (!txHash) {
-          throw new Error('Transaction Failed')
-        }
-        return this.getReceiptWhenMined(txHash)
-      })
-      .then(txReceipt => {
-        return { txReceipt, txHash }
-      })
+    if (!txHash) {
+      throw new Error('Transaction Failed')
+    }
+    console.log({ txHash })
+    const txReceipt = await this.getReceiptWhenMined(txHash)
+    return { txReceipt, txHash }
   }
-
   estimateGas = async ({
     bytecode,
     from,

@@ -7,7 +7,7 @@ import solc from 'solc'
 import { nodeAddress } from '../../titanrc'
 import * as web3Utils from 'web3-utils'
 
-import Ethereum from '../../ethereum'
+import Ethereum from '../../src/blockchains/ethereum'
 const ethereum = new Ethereum(nodeAddress.ethereum)
 const ExampleContract = {
   sol: fs.readFileSync(
@@ -38,14 +38,7 @@ describe('Test Ethereum class methods', () => {
   }).timeout(0)
 
   it('get balances for first account', async () => {
-    let wallet: any = []
-    for (const account of accounts) {
-      const etherBalance = await ethereum.getBalance(account)
-      wallet.push({
-        account,
-        etherBalance
-      })
-    }
+    let wallet = await ethereum.getBalancesWithAccounts()
     expect(wallet[0].account)
       .to.be.an('string')
       .to.have.lengthOf(42)

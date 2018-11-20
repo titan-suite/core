@@ -15,10 +15,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// import solc from 'solc'
 const web3Utils = __importStar(require("web3-utils"));
-const utils_1 = require("../utils");
-class Ethereum {
+const utils_1 = require("../../utils");
+class Common {
     constructor(nodeAddress) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_accounts');
@@ -29,11 +28,17 @@ class Ethereum {
                 'latest'
             ]).then(balance => Number(web3Utils.fromWei(balance)));
         });
-        this.compile = (address) => __awaiter(this, void 0, void 0, function* () {
-            throw new Error('Compiler not setup for ethereum');
+        this.getBalancesWithAccounts = () => __awaiter(this, void 0, void 0, function* () {
+            const accounts = yield this.getAccounts();
+            return Promise.all(accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                    const etherBalance = yield this.getBalance(account);
+                    return resolve({ account, etherBalance });
+                }));
+            })));
         });
         this.call = (params) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params, 'latest']);
+            return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params]);
         });
         this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_sendTransaction', [params]);
@@ -61,36 +66,25 @@ class Ethereum {
             throw new Error('Request timed out');
         });
         this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
-            if (!from || from.length !== 42) {
-                throw new Error('Invalid Account');
-            }
             let args = [];
             if (contractArguments) {
-                for (const arg of contractArguments.split(',')) {
-                    const hash = web3Utils.soliditySha3(arg);
-                    const parsedHash = hash.substring(2, 10);
-                    args.push(parsedHash);
-                }
+                args = contractArguments
+                    .split(',')
+                    .map(arg => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), 32));
             }
             const data = bytecode.concat(args.join(''));
-            let txHash;
-            return this.sendTransaction({
+            const txHash = yield this.sendTransaction({
                 from,
                 data,
                 gas,
                 gasPrice
-            })
-                .then(TxHash => {
-                console.log({ TxHash });
-                txHash = TxHash;
-                if (!txHash) {
-                    throw new Error('Transaction Failed');
-                }
-                return this.getReceiptWhenMined(txHash);
-            })
-                .then(txReceipt => {
-                return { txReceipt, txHash };
             });
+            if (!txHash) {
+                throw new Error('Transaction Failed');
+            }
+            console.log({ txHash });
+            const txReceipt = yield this.getReceiptWhenMined(txHash);
+            return { txReceipt, txHash };
         });
         this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
@@ -105,4 +99,4 @@ class Ethereum {
         this.nodeAddress = nodeAddress;
     }
 }
-exports.default = Ethereum;
+exports.default = Common;
