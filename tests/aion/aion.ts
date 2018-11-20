@@ -38,7 +38,7 @@ describe('Test AION class methods', () => {
 
   it('get balances for all account', async () => {
     const wallet = await aion.getBalancesWithAccounts()
-    expect(wallet[0].account)
+    expect(wallet[0].address)
       .to.be.an('string')
       .to.have.lengthOf(66)
     expect(wallet[0].etherBalance).to.be.a('number')

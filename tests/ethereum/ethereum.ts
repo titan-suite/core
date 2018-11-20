@@ -39,7 +39,7 @@ describe('Test Ethereum class methods', () => {
 
   it('get balances for first account', async () => {
     let wallet = await ethereum.getBalancesWithAccounts()
-    expect(wallet[0].account)
+    expect(wallet[0].address)
       .to.be.an('string')
       .to.have.lengthOf(42)
     expect(wallet[0].etherBalance).to.be.a('number')

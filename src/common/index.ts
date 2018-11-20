@@ -44,17 +44,18 @@ export default class Common {
   }
 
   getBalancesWithAccounts = async (): Promise<
-    Array<{ account: string; etherBalance: number }>
+    Array<{ address: string; etherBalance: number }>
   > => {
-    const accounts = await this.getAccounts()
-    return Promise.all(
-      accounts.map(async account => {
-        return new Promise(async resolve => {
-          const etherBalance = await this.getBalance(account)
-          return resolve({ account, etherBalance })
-        }) as Promise<{ account: string; etherBalance: number }>
+    const addresses = await this.getAccounts()
+    const accounts = []
+    for (const address of addresses) {
+      const etherBalance = await this.getBalance(address)
+      accounts.push({
+        address,
+        etherBalance: Number(etherBalance)
       })
-    )
+    }
+    return accounts
   }
   call = async (params: CallParameters) => {
     return rpcPost(this.nodeAddress, 'eth_call', [params])

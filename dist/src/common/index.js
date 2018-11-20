@@ -29,13 +29,16 @@ class Common {
             ]).then(balance => Number(web3Utils.fromWei(balance)));
         });
         this.getBalancesWithAccounts = () => __awaiter(this, void 0, void 0, function* () {
-            const accounts = yield this.getAccounts();
-            return Promise.all(accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-                    const etherBalance = yield this.getBalance(account);
-                    return resolve({ account, etherBalance });
-                }));
-            })));
+            const addresses = yield this.getAccounts();
+            const accounts = [];
+            for (const address of addresses) {
+                const etherBalance = yield this.getBalance(address);
+                accounts.push({
+                    address,
+                    etherBalance: Number(etherBalance)
+                });
+            }
+            return accounts;
         });
         this.call = (params) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params]);

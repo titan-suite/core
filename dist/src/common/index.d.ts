@@ -29,7 +29,7 @@ export default class Common {
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
-        account: string;
+        address: string;
         etherBalance: number;
     }[]>;
     call: (params: CallParameters) => Promise<any>;
