@@ -17,11 +17,6 @@ const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
     constructor(nodeAddress) {
         super(nodeAddress);
-        // public static compile = async (input: string): Promise<any> => {
-        //   // TODO https://github.com/ethereum/solc-js/pull/205
-        //   // const output = solc.compile(input, 1)
-        //   // return output
-        // }
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
             return utils_1.rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract]);
         });

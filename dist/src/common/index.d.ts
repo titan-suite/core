@@ -16,12 +16,13 @@ export interface CallParameters {
     value?: number;
     data?: string;
 }
-export interface Deploy {
+export interface Execute {
     bytecode: string;
     from: string;
     gas?: number;
     gasPrice?: number;
-    contractArguments?: string;
+    parameters?: any[];
+    padLength?: number;
 }
 export default class Common {
     nodeAddress: string;
@@ -36,9 +37,10 @@ export default class Common {
     sendTransaction: (params: TxParameters) => Promise<string>;
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
     getReceiptWhenMined: (txHash: string) => Promise<TransactionReceipt>;
-    deploy: ({ bytecode, from, gas, gasPrice, contractArguments }: Deploy) => Promise<{
+    deploy: ({ bytecode, from, gas, gasPrice, parameters, padLength }: Execute) => Promise<{
         txReceipt: TransactionReceipt;
         txHash: string;
     }>;
-    estimateGas: ({ bytecode, from, gas, gasPrice }: Deploy) => Promise<number>;
+    estimateGas: ({ bytecode, from, gas, gasPrice, parameters, padLength }: Execute) => Promise<number>;
+    convertParams: (params: any[], length: number) => any[];
 }

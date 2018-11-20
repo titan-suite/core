@@ -68,12 +68,10 @@ class Common {
             }
             throw new Error('Request timed out');
         });
-        this.deploy = ({ bytecode, from, gas, gasPrice, contractArguments }) => __awaiter(this, void 0, void 0, function* () {
+        this.deploy = ({ bytecode, from, gas, gasPrice, parameters, padLength }) => __awaiter(this, void 0, void 0, function* () {
             let args = [];
-            if (contractArguments) {
-                args = contractArguments
-                    .split(',')
-                    .map(arg => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), 32));
+            if (parameters && padLength) {
+                args = this.convertParams(parameters, padLength);
             }
             const data = bytecode.concat(args.join(''));
             const txHash = yield this.sendTransaction({
@@ -85,20 +83,28 @@ class Common {
             if (!txHash) {
                 throw new Error('Transaction Failed');
             }
-            console.log({ txHash });
             const txReceipt = yield this.getReceiptWhenMined(txHash);
             return { txReceipt, txHash };
         });
-        this.estimateGas = ({ bytecode, from, gas, gasPrice }) => __awaiter(this, void 0, void 0, function* () {
+        this.estimateGas = ({ bytecode, from, gas, gasPrice, parameters, padLength }) => __awaiter(this, void 0, void 0, function* () {
+            let args = [];
+            if (parameters && padLength) {
+                args = this.convertParams(parameters, padLength);
+            }
+            const data = bytecode.concat(args.join(''));
             return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
                 {
                     from,
-                    data: bytecode,
+                    data,
                     gas,
                     gasPrice
                 }
             ]).then(estimatedGas => Number(web3Utils.hexToNumber(estimatedGas)));
         });
+        this.convertParams = (params, length) => {
+            let res = params.map((arg) => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), length));
+            return res;
+        };
         this.nodeAddress = nodeAddress;
     }
 }
