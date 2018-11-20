@@ -50,17 +50,17 @@ class Common {
             return utils_1.rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash]);
         });
         this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            const maxTries = 20;
+            const maxTries = 40;
             let tries = 0;
             while (tries < maxTries) {
+                tries++;
                 try {
                     console.log('checking...');
                     let receipt = yield this.getTxReceipt(txHash);
-                    if (receipt && receipt.contractAddress) {
+                    if (receipt) {
                         return receipt;
                     }
-                    yield utils_1.sleep(3000);
-                    tries++;
+                    yield utils_1.sleep(2000);
                 }
                 catch (e) {
                     throw e;

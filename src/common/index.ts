@@ -70,17 +70,17 @@ export default class Common {
   }
 
   getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
-    const maxTries = 20
+    const maxTries = 40
     let tries = 0
     while (tries < maxTries) {
+      tries++
       try {
         console.log('checking...')
         let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
-        if (receipt && receipt.contractAddress) {
+        if (receipt) {
           return receipt
         }
-        await sleep(3000)
-        tries++
+        await sleep(2000)
       } catch (e) {
         throw e
       }
