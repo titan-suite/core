@@ -77,7 +77,9 @@ export default class Common {
     while (tries < maxTries) {
       tries++
       try {
-        console.log('checking...')
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('checking...')
+        }
         let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
         if (receipt) {
           return receipt

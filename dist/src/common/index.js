@@ -55,7 +55,9 @@ class Common {
             while (tries < maxTries) {
                 tries++;
                 try {
-                    console.log('checking...');
+                    if (process.env.NODE_ENV !== 'production') {
+                        console.log('checking...');
+                    }
                     let receipt = yield this.getTxReceipt(txHash);
                     if (receipt) {
                         return receipt;
