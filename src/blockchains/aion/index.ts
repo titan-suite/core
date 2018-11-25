@@ -11,7 +11,7 @@ export default class Aion extends Common {
     return this.web3.eth.compileSolidity(contract)
   }
 
-  unlock = async (address: string, password: string, duration = 100000) => {
+  unlock = async (address: string, password: string, duration = 100000):Promise<boolean> => {
     return this.web3.eth.personal.unlockAccount(address, password, duration)
   }
 }

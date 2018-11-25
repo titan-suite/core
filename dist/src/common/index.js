@@ -70,7 +70,6 @@ class Common {
             // throw new Error('Request timed out')
             let txReceipt;
             let txHash;
-            let confirmation;
             const response = yield functionCall
                 .on('receipt', (Receipt) => {
                 txReceipt = Receipt;
@@ -81,14 +80,10 @@ class Common {
                 .on('transactionHash', (TxHash) => {
                 txHash = TxHash;
                 console.log({ txHash });
-            })
-                .on('confirmation', (confNumber, confReceipt) => {
-                confirmation = { confNumber, confReceipt };
             });
             return {
                 txReceipt,
                 txHash,
-                confirmation,
                 response
             };
         });

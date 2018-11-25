@@ -1,5 +1,5 @@
 import * as web3Utils from 'web3-utils'
-
+import { TransactionReceipt } from 'ethereum-types'
 export interface Params {
   to?: string
   value?: number | string
@@ -32,7 +32,7 @@ export default class Common {
     this.web3 = web3
   }
 
-  getAccounts = async () => {
+  getAccounts = async (): Promise<string[]> => {
     return this.web3.eth.getAccounts()
   }
 
@@ -67,7 +67,7 @@ export default class Common {
     return this.web3.eth.sendTransaction(params)
   }
 
-  getTxReceipt = async (txHash: string) => {
+  getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
     return this.web3.eth.getTransactionReceipt(txHash)
   }
 
@@ -90,27 +90,22 @@ export default class Common {
     //   }
     // }
     // throw new Error('Request timed out')
-    let txReceipt
-    let txHash
-    let confirmation
+    let txReceipt: undefined | TransactionReceipt
+    let txHash: undefined | string
     const response = await functionCall
-      .on('receipt', (Receipt: any) => {
+      .on('receipt', (Receipt: TransactionReceipt) => {
         txReceipt = Receipt
       })
-      .on('error', (error: any) => {
+      .on('error', (error: Error) => {
         throw error
       })
-      .on('transactionHash', (TxHash: any) => {
+      .on('transactionHash', (TxHash: string) => {
         txHash = TxHash
         console.log({ txHash })
-      })
-      .on('confirmation', (confNumber: any, confReceipt: any) => {
-        confirmation = { confNumber, confReceipt }
       })
     return {
       txReceipt,
       txHash,
-      confirmation,
       response
     }
   }

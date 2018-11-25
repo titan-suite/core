@@ -1,4 +1,4 @@
-import * as Web3 from 'aion-web3';
+import { TransactionReceipt } from 'ethereum-types';
 export interface Params {
     to?: string;
     value?: number | string;
@@ -23,27 +23,25 @@ export interface Execute {
 }
 export default class Common {
     nodeAddress: string;
-    web3: Web3;
-    constructor(nodeAddress: string, web3: Web3);
+    web3: any;
+    constructor(nodeAddress: string, web3: any);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
         address: string;
         etherBalance: number;
     }[]>;
-    call: (params: CallParameters) => Promise<string>;
-    sendTransaction: (params: TxParameters) => Promise<string>;
-    getTxReceipt: (txHash: string) => Promise<import("ethereum-types").TransactionReceipt | null>;
+    call: (params: CallParameters) => Promise<any>;
+    sendTransaction: (params: TxParameters) => Promise<any>;
+    getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
     getResponseWhenMined: (functionCall: any) => Promise<{
-        txReceipt: undefined;
-        txHash: undefined;
-        confirmation: undefined;
+        txReceipt: TransactionReceipt | undefined;
+        txHash: string | undefined;
         response: any;
     }>;
     deploy: ({ code, abi, from, gas, gasPrice, args }: Execute) => Promise<{
-        txReceipt: undefined;
-        txHash: undefined;
-        confirmation: undefined;
+        txReceipt: TransactionReceipt | undefined;
+        txHash: string | undefined;
         response: any;
     }>;
     getContract: (abi: any[], address: string) => any;
