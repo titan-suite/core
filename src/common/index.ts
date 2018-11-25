@@ -1,4 +1,3 @@
-import * as Web3 from 'aion-web3'
 import * as web3Utils from 'web3-utils'
 
 export interface Params {
@@ -27,8 +26,8 @@ export interface Execute {
 
 export default class Common {
   public nodeAddress: string
-  public web3: Web3
-  constructor(nodeAddress: string, web3: Web3) {
+  public web3: any
+  constructor(nodeAddress: string, web3: any) {
     this.nodeAddress = nodeAddress
     this.web3 = web3
   }
