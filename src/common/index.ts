@@ -1,53 +1,54 @@
+import * as Web3 from 'aion-web3'
 import * as web3Utils from 'web3-utils'
-import { TransactionReceipt } from 'ethereum-types'
-import { sleep, rpcPost } from '../../utils'
-export interface TxParameters {
-  from: string
+
+export interface Params {
   to?: string
-  gas?: number
-  gasPrice?: number
-  value?: number
-  data: string
+  value?: number | string
+  gas?: number | string
+  gasPrice?: number | string
+  data?: string
   nonce?: number
 }
-export interface CallParameters {
+export interface TxParameters extends Params {
   from: string
-  to: string
-  gas?: number
-  gasPrice?: number
-  value?: number
-  data?: string
 }
+export interface CallParameters extends Params {
+  from?: string
+}
+
 export interface Execute {
-  bytecode: string
+  code: string
+  abi: any[]
   from: string
   gas?: number
   gasPrice?: number
-  parameters?: any[]
-  padLength?: number
+  args?: any[]
 }
 
 export default class Common {
   public nodeAddress: string
-  constructor(nodeAddress: string) {
+  public web3: Web3
+  constructor(nodeAddress: string, web3: Web3) {
     this.nodeAddress = nodeAddress
+    this.web3 = web3
   }
 
-  getAccounts = async (): Promise<string[]> => {
-    return rpcPost(this.nodeAddress, 'eth_accounts')
+  getAccounts = async () => {
+    return this.web3.eth.getAccounts()
   }
 
   getBalance = async (address: string): Promise<number> => {
-    return rpcPost(this.nodeAddress, 'eth_getBalance', [
-      address,
-      'latest'
-    ]).then(balance => Number(web3Utils.fromWei(balance)))
+    const balance = await this.web3.eth.getBalance(address)
+    return web3Utils.fromWei(balance)
   }
 
   getBalancesWithAccounts = async (): Promise<
     Array<{ address: string; etherBalance: number }>
   > => {
     const addresses = await this.getAccounts()
+    if (!addresses) {
+      return []
+    }
     const accounts = []
     for (const address of addresses) {
       const etherBalance = await this.getBalance(address)
@@ -60,94 +61,87 @@ export default class Common {
   }
 
   call = async (params: CallParameters) => {
-    return rpcPost(this.nodeAddress, 'eth_call', [params])
+    return this.web3.eth.call(params)
   }
 
-  sendTransaction = async (params: TxParameters): Promise<string> => {
-    return rpcPost(this.nodeAddress, 'eth_sendTransaction', [params])
+  sendTransaction = async (params: TxParameters) => {
+    return this.web3.eth.sendTransaction(params)
   }
 
-  getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
-    return rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash])
+  getTxReceipt = async (txHash: string) => {
+    return this.web3.eth.getTransactionReceipt(txHash)
   }
 
-  getReceiptWhenMined = async (txHash: string): Promise<TransactionReceipt> => {
-    const maxTries = 40
-    let tries = 0
-    while (tries < maxTries) {
-      tries++
-      try {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('checking...')
-        }
-        let receipt: TransactionReceipt = await this.getTxReceipt(txHash)
-        if (receipt) {
-          return receipt
-        }
-        await sleep(2000)
-      } catch (e) {
-        throw e
-      }
+  getResponseWhenMined = async (functionCall: any) => {
+    // const maxTries = 40
+    // let tries = 0
+    // while (tries < maxTries) {
+    //   tries++
+    //   try {
+    //     if (process.env.NODE_ENV !== 'production') {
+    //       console.log('checking...')
+    //     }
+    //     let receipt = await this.getTxReceipt(txHash)
+    //     if (receipt) {
+    //       return receipt
+    //     }
+    //     await sleep(2000)
+    //   } catch (e) {
+    //     throw e
+    //   }
+    // }
+    // throw new Error('Request timed out')
+    let txReceipt
+    let txHash
+    let confirmation
+    const response = await functionCall
+      .on('receipt', (Receipt: any) => {
+        txReceipt = Receipt
+      })
+      .on('error', (error: any) => {
+        throw error
+      })
+      .on('transactionHash', (TxHash: any) => {
+        txHash = TxHash
+        console.log({ txHash })
+      })
+      .on('confirmation', (confNumber: any, confReceipt: any) => {
+        confirmation = { confNumber, confReceipt }
+      })
+    return {
+      txReceipt,
+      txHash,
+      confirmation,
+      response
     }
-    throw new Error('Request timed out')
   }
 
   deploy = async ({
-    bytecode,
+    code,
+    abi,
     from,
-    gas,
-    gasPrice,
-    parameters,
-    padLength
-  }: Execute): Promise<{
-    txReceipt: TransactionReceipt;
-    txHash: string;
-  }> => {
-    let args = []
-    if (parameters && padLength) {
-      args = this.convertParams(parameters, padLength)
-    }
-    const data = bytecode.concat(args.join(''))
-    const txHash: string = await this.sendTransaction({
-      from,
-      data,
-      gas,
-      gasPrice
-    })
-    if (!txHash) {
-      throw new Error('Transaction Failed')
-    }
-    const txReceipt = await this.getReceiptWhenMined(txHash)
-    return { txReceipt, txHash }
-  }
-
-  estimateGas = async ({
-    bytecode,
-    from,
-    gas,
-    gasPrice,
-    parameters,
-    padLength
-  }: Execute): Promise<number> => {
-    let args = []
-    if (parameters && padLength) {
-      args = this.convertParams(parameters, padLength)
-    }
-    const data = bytecode.concat(args.join(''))
-    return rpcPost(this.nodeAddress, 'eth_estimateGas', [
-      {
-        from,
-        data,
-        gas,
-        gasPrice
-      }
-    ]).then(estimatedGas => Number(web3Utils.hexToNumber(estimatedGas)))
-  }
-
-  convertParams = (params: any[], length: number) => {
-    let res = params.map((arg: any) =>
-      web3Utils.padLeft(web3Utils.toHex(arg).substring(2), length)
+    gas = 5000000,
+    gasPrice = 10000000000,
+    args
+  }: Execute) => {
+    const contract = new (this.web3.eth.Contract as any)(abi)
+    return this.getResponseWhenMined(
+      contract
+        .deploy({
+          data: code,
+          arguments: args
+        })
+        .send({
+          from,
+          gas,
+          gasPrice
+        })
     )
-    return res
+  }
+  getContract = (abi: any[], address: string) => {
+    return new (this.web3.eth.Contract as any)(abi, address)
+  }
+  estimateGas = async (params: TxParameters): Promise<number> => {
+    return this.web3.eth.estimateGas(params)
   }
 }

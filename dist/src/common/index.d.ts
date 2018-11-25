@@ -1,46 +1,51 @@
-import { TransactionReceipt } from 'ethereum-types';
-export interface TxParameters {
-    from: string;
+import * as Web3 from 'aion-web3';
+export interface Params {
     to?: string;
-    gas?: number;
-    gasPrice?: number;
-    value?: number;
-    data: string;
+    value?: number | string;
+    gas?: number | string;
+    gasPrice?: number | string;
+    data?: string;
     nonce?: number;
 }
-export interface CallParameters {
+export interface TxParameters extends Params {
     from: string;
-    to: string;
-    gas?: number;
-    gasPrice?: number;
-    value?: number;
-    data?: string;
+}
+export interface CallParameters extends Params {
+    from?: string;
 }
 export interface Execute {
-    bytecode: string;
+    code: string;
+    abi: any[];
     from: string;
     gas?: number;
     gasPrice?: number;
-    parameters?: any[];
-    padLength?: number;
+    args?: any[];
 }
 export default class Common {
     nodeAddress: string;
-    constructor(nodeAddress: string);
+    web3: Web3;
+    constructor(nodeAddress: string, web3: Web3);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
         address: string;
         etherBalance: number;
     }[]>;
-    call: (params: CallParameters) => Promise<any>;
+    call: (params: CallParameters) => Promise<string>;
     sendTransaction: (params: TxParameters) => Promise<string>;
-    getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
-    getReceiptWhenMined: (txHash: string) => Promise<TransactionReceipt>;
-    deploy: ({ bytecode, from, gas, gasPrice, parameters, padLength }: Execute) => Promise<{
-        txReceipt: TransactionReceipt;
-        txHash: string;
+    getTxReceipt: (txHash: string) => Promise<import("ethereum-types").TransactionReceipt | null>;
+    getResponseWhenMined: (functionCall: any) => Promise<{
+        txReceipt: undefined;
+        txHash: undefined;
+        confirmation: undefined;
+        response: any;
     }>;
-    estimateGas: ({ bytecode, from, gas, gasPrice, parameters, padLength }: Execute) => Promise<number>;
-    convertParams: (params: any[], length: number) => any[];
+    deploy: ({ code, abi, from, gas, gasPrice, args }: Execute) => Promise<{
+        txReceipt: undefined;
+        txHash: undefined;
+        confirmation: undefined;
+        response: any;
+    }>;
+    getContract: (abi: any[], address: string) => any;
+    estimateGas: (params: TxParameters) => Promise<number>;
 }

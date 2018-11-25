@@ -12,19 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // import solc from 'solc'
-const utils_1 = require("../../../utils");
+const Web3 = require('aion-web3');
 const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
     constructor(nodeAddress) {
-        super(nodeAddress);
+        super(nodeAddress, new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract]);
+            return this.web3.eth.compileSolidity(contract);
         });
-        this.unlock = (address, password) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'personal_unlockAccount', [
-                address,
-                password
-            ]);
+        this.unlock = (address, password, duration = 100000) => __awaiter(this, void 0, void 0, function* () {
+            return this.web3.eth.personal.unlockAccount(address, password, duration);
         });
     }
 }

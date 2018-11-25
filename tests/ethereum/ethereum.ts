@@ -9,13 +9,6 @@ import * as web3Utils from 'web3-utils'
 
 import Ethereum from '../../src/blockchains/ethereum'
 const ethereum = new Ethereum(nodeAddress.ethereum)
-const ExampleContract = {
-  sol: fs.readFileSync(
-    path.resolve(__dirname, 'contracts', 'Example.sol'),
-    'utf8'
-  ),
-  name: ':Example'
-}
 const WithConstructorContract = {
   sol: fs.readFileSync(
     path.resolve(__dirname, 'contracts', 'WithConstructor.sol'),
@@ -26,7 +19,7 @@ const WithConstructorContract = {
 
 describe('Test Ethereum class methods', () => {
   let accounts: string[]
-  let deployedContractAddress: string
+  let contractInstance: any
   it('get all accounts', async () => {
     accounts = await ethereum.getAccounts()
     expect(accounts)
@@ -45,91 +38,55 @@ describe('Test Ethereum class methods', () => {
     expect(wallet[0].etherBalance).to.be.a('number')
   }).timeout(0)
 
-  it('successfully returns sha3 of a input', async () => {
-    const signature = 'name()'
-    const response = await web3Utils.soliditySha3(signature)
-    expect(response)
-      .to.be.an('string')
-      .to.have.lengthOf(66)
-  }).timeout(0)
-
   it('successfully compiles a contract and estimates gas', async () => {
     const sol =
       'pragma solidity ^0.4.9; contract Demo { address owner; uint public test; function Demo(uint t) public { owner = msg.sender; test = t; } }'
     const response = await solc.compile(sol, 1)
-    const bytecode = response.contracts[':Demo'].bytecode
+    const code = response.contracts[':Demo'].bytecode
 
     const estimatedGas = await ethereum.estimateGas({
-      bytecode,
+      data: code,
       from: accounts[0],
-      gas: 2000000,
-      parameters: ['15'],
-      padLength: 64
+      gas: 2000000
     })
     expect(estimatedGas)
       .be.a('number')
       .to.be.greaterThan(20000)
-    expect(bytecode).to.be.an('string')
-  }).timeout(0)
-
-  it('successfully deploys the Example contract', async () => {
-    const compiled = await solc.compile(ExampleContract.sol)
-    const bytecode = compiled.contracts[ExampleContract.name].bytecode
-    const res = await ethereum.deploy({
-      bytecode,
-      from: accounts[0],
-      gas: 2000000
-    })
-    if (res) {
-      expect(res.txReceipt.transactionHash).to.equal(res.txHash)
-    } else {
-      throw new Error('Failed to deploy')
-    }
+    expect(code).to.be.an('string')
   }).timeout(0)
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
     const compiled = await solc.compile(WithConstructorContract.sol)
-    const bytecode = compiled.contracts[WithConstructorContract.name].bytecode
-
-    const res = await ethereum.deploy({
-      bytecode,
+    const { interface: abi, bytecode: code } = compiled.contracts[
+      WithConstructorContract.name
+    ]
+    const res: any = await ethereum.deploy({
+      abi: JSON.parse(abi),
+      code,
       from: accounts[0],
       gas: 2000000,
-      parameters: [15, 'Titan'],
-      padLength: 64
+      args: [15, web3Utils.fromUtf8('Titan')]
     })
-    if (res) {
-      deployedContractAddress = res.txReceipt.contractAddress as string
-      expect(res.txReceipt.transactionHash).to.equal(res.txHash)
-    } else {
-      throw new Error('Failed to deploy')
-    }
+    contractInstance = res.response
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
   }).timeout(0)
 
-  it('gets back the value of data', async () => {
-    let funcHash = await web3Utils.soliditySha3('getData()')
-    funcHash = funcHash.substring(0, 10)
-    let res = await ethereum.call({
-      from: accounts[0],
-      to: deployedContractAddress,
-      data: funcHash
-    })
-    res = await web3Utils.hexToUtf8(res)
-    expect(res).to.equal('Titan')
+  it('expect data to equal Titan', async () => {
+    let data = await contractInstance.methods
+      .getData()
+      .call({ from: accounts[0] })
+    data = web3Utils.toUtf8(data)
+    expect(data).to.equal('Titan')
   }).timeout(0)
 
-  it('gets back 27 after adding 12 to num', async () => {
-    const funcHash = await web3Utils.soliditySha3('add(uint256)')
-    const param = web3Utils.numberToHex(12).substring(2)
-    const paddedParam = await web3Utils.leftPad(param, 64, '0')
-    const data = funcHash.substring(0, 10) + paddedParam
-
-    let res = await ethereum.call({
-      from: accounts[0],
-      to: deployedContractAddress,
-      data
-    })
-    res = await web3Utils.hexToNumber(res)
-    expect(res).to.equal(27)
+  it('set value of num and expect add result to be 4', async () => {
+    const res: any = await ethereum.getResponseWhenMined(
+      contractInstance.methods.setA(2).send({ from: accounts[0], gas: 2000000 })
+    )
+    const num = await contractInstance.methods
+      .add(2)
+      .call({ from: accounts[0] })
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
+    expect(num).to.equal('4')
   }).timeout(0)
 })

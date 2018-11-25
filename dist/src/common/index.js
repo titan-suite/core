@@ -16,20 +16,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const web3Utils = __importStar(require("web3-utils"));
-const utils_1 = require("../../utils");
 class Common {
-    constructor(nodeAddress) {
+    constructor(nodeAddress, web3) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_accounts');
+            return this.web3.eth.getAccounts();
         });
         this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_getBalance', [
-                address,
-                'latest'
-            ]).then(balance => Number(web3Utils.fromWei(balance)));
+            const balance = yield this.web3.eth.getBalance(address);
+            return web3Utils.fromWei(balance);
         });
         this.getBalancesWithAccounts = () => __awaiter(this, void 0, void 0, function* () {
             const addresses = yield this.getAccounts();
+            if (!addresses) {
+                return [];
+            }
             const accounts = [];
             for (const address of addresses) {
                 const etherBalance = yield this.getBalance(address);
@@ -41,73 +41,78 @@ class Common {
             return accounts;
         });
         this.call = (params) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_call', [params]);
+            return this.web3.eth.call(params);
         });
         this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_sendTransaction', [params]);
+            return this.web3.eth.sendTransaction(params);
         });
         this.getTxReceipt = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            return utils_1.rpcPost(this.nodeAddress, 'eth_getTransactionReceipt', [txHash]);
+            return this.web3.eth.getTransactionReceipt(txHash);
         });
-        this.getReceiptWhenMined = (txHash) => __awaiter(this, void 0, void 0, function* () {
-            const maxTries = 40;
-            let tries = 0;
-            while (tries < maxTries) {
-                tries++;
-                try {
-                    if (process.env.NODE_ENV !== 'production') {
-                        console.log('checking...');
-                    }
-                    let receipt = yield this.getTxReceipt(txHash);
-                    if (receipt) {
-                        return receipt;
-                    }
-                    yield utils_1.sleep(2000);
-                }
-                catch (e) {
-                    throw e;
-                }
-            }
-            throw new Error('Request timed out');
+        this.getResponseWhenMined = (functionCall) => __awaiter(this, void 0, void 0, function* () {
+            // const maxTries = 40
+            // let tries = 0
+            // while (tries < maxTries) {
+            //   tries++
+            //   try {
+            //     if (process.env.NODE_ENV !== 'production') {
+            //       console.log('checking...')
+            //     }
+            //     let receipt = await this.getTxReceipt(txHash)
+            //     if (receipt) {
+            //       return receipt
+            //     }
+            //     await sleep(2000)
+            //   } catch (e) {
+            //     throw e
+            //   }
+            // }
+            // throw new Error('Request timed out')
+            let txReceipt;
+            let txHash;
+            let confirmation;
+            const response = yield functionCall
+                .on('receipt', (Receipt) => {
+                txReceipt = Receipt;
+            })
+                .on('error', (error) => {
+                throw error;
+            })
+                .on('transactionHash', (TxHash) => {
+                txHash = TxHash;
+                console.log({ txHash });
+            })
+                .on('confirmation', (confNumber, confReceipt) => {
+                confirmation = { confNumber, confReceipt };
+            });
+            return {
+                txReceipt,
+                txHash,
+                confirmation,
+                response
+            };
         });
-        this.deploy = ({ bytecode, from, gas, gasPrice, parameters, padLength }) => __awaiter(this, void 0, void 0, function* () {
-            let args = [];
-            if (parameters && padLength) {
-                args = this.convertParams(parameters, padLength);
-            }
-            const data = bytecode.concat(args.join(''));
-            const txHash = yield this.sendTransaction({
+        this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
+            const contract = new this.web3.eth.Contract(abi);
+            return this.getResponseWhenMined(contract
+                .deploy({
+                data: code,
+                arguments: args
+            })
+                .send({
                 from,
-                data,
                 gas,
                 gasPrice
-            });
-            if (!txHash) {
-                throw new Error('Transaction Failed');
-            }
-            const txReceipt = yield this.getReceiptWhenMined(txHash);
-            return { txReceipt, txHash };
+            }));
         });
-        this.estimateGas = ({ bytecode, from, gas, gasPrice, parameters, padLength }) => __awaiter(this, void 0, void 0, function* () {
-            let args = [];
-            if (parameters && padLength) {
-                args = this.convertParams(parameters, padLength);
-            }
-            const data = bytecode.concat(args.join(''));
-            return utils_1.rpcPost(this.nodeAddress, 'eth_estimateGas', [
-                {
-                    from,
-                    data,
-                    gas,
-                    gasPrice
-                }
-            ]).then(estimatedGas => Number(web3Utils.hexToNumber(estimatedGas)));
-        });
-        this.convertParams = (params, length) => {
-            let res = params.map((arg) => web3Utils.padLeft(web3Utils.toHex(arg).substring(2), length));
-            return res;
+        this.getContract = (abi, address) => {
+            return new this.web3.eth.Contract(abi, address);
         };
+        this.estimateGas = (params) => __awaiter(this, void 0, void 0, function* () {
+            return this.web3.eth.estimateGas(params);
+        });
         this.nodeAddress = nodeAddress;
+        this.web3 = web3;
     }
 }
 exports.default = Common;

@@ -1,26 +1,17 @@
 // import solc from 'solc'
-import { rpcPost } from '../../../utils'
+const Web3 = require('aion-web3')
 import Common from '../../common'
-export interface Deploy {
-  bytecode: string
-  from: string
-  gas?: number
-  gasPrice?: number
-  contractArguments?: string
-}
+
 export default class Aion extends Common {
   constructor(nodeAddress: string) {
-    super(nodeAddress)
+    super(nodeAddress, new Web3(new Web3.providers.HttpProvider(nodeAddress)))
   }
 
   compile = async (contract: string): Promise<{ [key: string]: any }> => {
-    return rpcPost(this.nodeAddress, 'eth_compileSolidity', [contract])
+    return this.web3.eth.compileSolidity(contract)
   }
 
-  unlock = async (address: string, password: string): Promise<boolean> => {
-    return rpcPost(this.nodeAddress, 'personal_unlockAccount', [
-      address,
-      password
-    ])
+  unlock = async (address: string, password: string, duration = 100000) => {
+    return this.web3.eth.personal.unlockAccount(address, password, duration)
   }
 }

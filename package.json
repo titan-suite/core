@@ -7,28 +7,31 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "mocha --require ts-node/register tests/**/*.ts",
-    "test:ethereum": "mocha --require ts-node/register tests/ethereum/*.ts",
-    "test:aion": "mocha --require ts-node/register tests/aion/*.ts"
+    "test": "mocha --require ts-node/register tests/**/*.ts --exit",
+    "test:ethereum": "mocha --require ts-node/register tests/ethereum/*.ts --exit",
+    "test:aion": "mocha --require ts-node/register tests/aion/*.ts --exit"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^10.9.4",
+    "@types/node": "^10.12.10",
+    "@types/underscore": "^1.8.9",
+    "bignumber.js": "^8.0.1",
     "chai": "^4.2.0",
     "ethereum-types": "^1.0.5",
     "mocha": "^5.2.0",
     "nodemon": "^1.18.3",
     "prettier": "^1.15.2",
+    "solc": "0.4.15",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "solc": "0.4.15",
-    "typescript": "^3.0.1"
+    "typescript": "^3.0.1",
+    "underscore": "^1.9.1"
   },
   "dependencies": {
-    "axios": "^0.18.0",
-    "web3-utils": "^1.0.0-beta.36"
+    "aion-web3": "^1.1.0",
+    "web3": "^1.0.0-beta.36"
   }
 }
