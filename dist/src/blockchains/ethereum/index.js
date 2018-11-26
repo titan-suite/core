@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = __importDefault(require("../../common"));
 const Web3 = require('web3');
 class Ethereum extends common_1.default {
-    constructor(nodeAddress) {
-        super(nodeAddress, new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+    constructor(nodeAddress, isInjected = false, web3) {
+        super(nodeAddress, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         // public static compile = async (input: string): Promise<any> => {
         //   // TODO https://github.com/ethereum/solc-js/pull/205
         //   // const output = solc.compile(input, 1)

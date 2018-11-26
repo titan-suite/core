@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Web3 = require('aion-web3');
 const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
-    constructor(nodeAddress) {
-        super(nodeAddress, new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+    constructor(nodeAddress, isInjected = false, web3) {
+        super(nodeAddress, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.compileSolidity(contract);
         });
