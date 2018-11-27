@@ -22,9 +22,9 @@ export interface Execute {
     args?: any[];
 }
 export default class Common {
-    nodeAddress: string;
+    isInjected: boolean;
     web3: any;
-    constructor(nodeAddress: string, web3: any);
+    constructor(isInjected: boolean, web3: any);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
@@ -40,10 +40,11 @@ export default class Common {
         response: any;
     }>;
     deploy: ({ code, abi, from, gas, gasPrice, args }: Execute) => Promise<{
-        txReceipt: TransactionReceipt | undefined;
-        txHash: string | undefined;
-        response: any;
+        txHash: any;
+        txReceipt: any;
     }>;
     getContract: (abi: any[], address: string) => any;
     estimateGas: (params: TxParameters) => Promise<number>;
+    InjectedWeb3DeployContract: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
+    InjectedDeploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
 }

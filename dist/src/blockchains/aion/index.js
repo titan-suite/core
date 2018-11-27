@@ -16,11 +16,44 @@ const Web3 = require('aion-web3');
 const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
     constructor(nodeAddress, isInjected = false, web3) {
-        super(nodeAddress, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+        super(isInjected, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
+            console.log(this.isInjected);
+            if (this.isInjected) {
+                return new Promise((resolve, reject) => {
+                    this.web3.eth.compile.solidity(contract, (err, res) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        if ('compile-error' in res) {
+                            return reject(res['compile-error'].error);
+                        }
+                        if (res) {
+                            return resolve(res);
+                        }
+                    });
+                });
+            }
             return this.web3.eth.compileSolidity(contract);
         });
         this.unlock = (address, password, duration = 100000) => __awaiter(this, void 0, void 0, function* () {
+            if (this.isInjected) {
+                return new Promise((resolve, reject) => {
+                    this.web3.personal
+                        ? this.web3.personal.unlockAccount(address, password, duration, (err, isUnlocked) => {
+                            if (err) {
+                                return reject(err);
+                            }
+                            else if (isUnlocked && isUnlocked === true) {
+                                return resolve(isUnlocked);
+                            }
+                            else {
+                                return reject('unlock failed');
+                            }
+                        })
+                        : reject('Invalid Web3');
+                });
+            }
             return this.web3.eth.personal.unlockAccount(address, password, duration);
         });
     }
