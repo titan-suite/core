@@ -16,14 +16,32 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const web3Utils = __importStar(require("web3-utils"));
+const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
 class Common {
-    constructor(nodeAddress, web3) {
+    constructor(isInjected, web3) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
+            if (this.isInjected) {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    return resolve(yield this.web3.eth.accounts);
+                }));
+            }
             return this.web3.eth.getAccounts();
         });
         this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
+            if (this.isInjected) {
+                return new Promise((resolve, reject) => {
+                    this.web3.eth.getBalance(address, (err, bal) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(web3Utils.fromWei(`${bal}`, 'ether'));
+                    });
+                });
+            }
             const balance = yield this.web3.eth.getBalance(address);
-            return web3Utils.fromWei(balance);
+            return web3Utils.fromWei(balance, 'ether');
         });
         this.getBalancesWithAccounts = () => __awaiter(this, void 0, void 0, function* () {
             const addresses = yield this.getAccounts();
@@ -50,24 +68,6 @@ class Common {
             return this.web3.eth.getTransactionReceipt(txHash);
         });
         this.getResponseWhenMined = (functionCall) => __awaiter(this, void 0, void 0, function* () {
-            // const maxTries = 40
-            // let tries = 0
-            // while (tries < maxTries) {
-            //   tries++
-            //   try {
-            //     if (process.env.NODE_ENV !== 'production') {
-            //       console.log('checking...')
-            //     }
-            //     let receipt = await this.getTxReceipt(txHash)
-            //     if (receipt) {
-            //       return receipt
-            //     }
-            //     await sleep(2000)
-            //   } catch (e) {
-            //     throw e
-            //   }
-            // }
-            // throw new Error('Request timed out')
             let txReceipt;
             let txHash;
             const response = yield functionCall
@@ -88,6 +88,15 @@ class Common {
             };
         });
         this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
+            if (this.isInjected) {
+                return this.InjectedDeploy({
+                    abi,
+                    code,
+                    from,
+                    gas,
+                    args
+                });
+            }
             const contract = new this.web3.eth.Contract(abi);
             return this.getResponseWhenMined(contract
                 .deploy({
@@ -106,7 +115,80 @@ class Common {
         this.estimateGas = (params) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.estimateGas(params);
         });
-        this.nodeAddress = nodeAddress;
+        // InjectedGetResponseWhenMined = async (txHash: string) => {
+        //   const maxTries = 40
+        //   let tries = 0
+        //   while (tries < maxTries) {
+        //     tries++
+        //     try {
+        //       if (process.env.NODE_ENV !== 'production') {
+        //         console.log('checking...')
+        //       }
+        //       let receipt = await this.getTxReceipt(txHash)
+        //       if (receipt) {
+        //         return receipt
+        //       }
+        //       await sleep(5000)
+        //     } catch (e) {
+        //       throw e
+        //     }
+        //   }
+        //   throw new Error('Request timed out')
+        // }
+        this.InjectedWeb3DeployContract = ({ abi, code, from, gas, args }) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                if (args && args.length > 0) {
+                    this.web3.eth.contract(abi).new(args, {
+                        from,
+                        data: code,
+                        gas
+                    }, (err, contract) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        else if (contract && contract.address) {
+                            resolve({
+                                txHash: contract.transactionHash,
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                            });
+                        }
+                    });
+                }
+                else {
+                    this.web3.eth.contract(abi).new({
+                        from,
+                        data: code,
+                        gas
+                    }, (err, contract) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        else if (contract && contract.address) {
+                            resolve({
+                                txHash: contract.transactionHash,
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                            });
+                        }
+                    });
+                }
+            });
+        });
+        this.InjectedDeploy = ({ abi, code, from, gas, args }) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const deployedContract = yield this.InjectedWeb3DeployContract({
+                    abi,
+                    code,
+                    from,
+                    gas,
+                    args
+                });
+                return deployedContract;
+            }
+            catch (e) {
+                throw e;
+            }
+        });
+        this.isInjected = isInjected;
         this.web3 = web3;
     }
 }

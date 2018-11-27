@@ -16,14 +16,29 @@ const common_1 = __importDefault(require("../../common"));
 const Web3 = require('web3');
 class Ethereum extends common_1.default {
     constructor(nodeAddress, isInjected = false, web3) {
-        super(nodeAddress, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+        super(isInjected, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         // public static compile = async (input: string): Promise<any> => {
         //   // TODO https://github.com/ethereum/solc-js/pull/205
         //   // const output = solc.compile(input, 1)
         //   // return output
         // }
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
-            throw new Error('Compiler not setup for ethereum');
+            if (this.isInjected) {
+                return new Promise((resolve, reject) => {
+                    this.web3.eth.compile.solidity(contract, (err, res) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        if ('compile-error' in res) {
+                            return reject(res['compile-error'].error);
+                        }
+                        if (res) {
+                            return resolve(res);
+                        }
+                    });
+                });
+            }
+            return this.web3.eth.compileSolidity(contract);
         });
     }
 }

@@ -1,5 +1,8 @@
 import * as web3Utils from 'web3-utils'
 import { TransactionReceipt } from 'ethereum-types'
+const sleep = (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 export interface Params {
   to?: string
   value?: number | string
@@ -25,20 +28,35 @@ export interface Execute {
 }
 
 export default class Common {
-  public nodeAddress: string
+  public isOldWeb3: boolean
   public web3: any
-  constructor(nodeAddress: string, web3: any) {
-    this.nodeAddress = nodeAddress
+  constructor(isOldWeb3: boolean, web3: any) {
+    this.isOldWeb3 = isOldWeb3
     this.web3 = web3
   }
 
   getAccounts = async (): Promise<string[]> => {
+    if (this.isOldWeb3) {
+      return new Promise(async (resolve, reject) => {
+        return resolve(await this.web3.eth.accounts)
+      }) as Promise<string[]>
+    }
     return this.web3.eth.getAccounts()
   }
 
   getBalance = async (address: string): Promise<number> => {
+    if (this.isOldWeb3) {
+      return new Promise((resolve, reject) => {
+        this.web3.eth.getBalance(address, (err: any, bal: number) => {
+          if (err) {
+            return reject(err)
+          }
+          return resolve(web3Utils.fromWei(`${bal}`))
+        })
+      }) as Promise<number>
+    }
     const balance = await this.web3.eth.getBalance(address)
-    return web3Utils.fromWei(balance)
+    return web3Utils.fromWei(balance, 'ether')
   }
 
   getBalancesWithAccounts = async (): Promise<
@@ -72,24 +90,6 @@ export default class Common {
   }
 
   getResponseWhenMined = async (functionCall: any) => {
-    // const maxTries = 40
-    // let tries = 0
-    // while (tries < maxTries) {
-    //   tries++
-    //   try {
-    //     if (process.env.NODE_ENV !== 'production') {
-    //       console.log('checking...')
-    //     }
-    //     let receipt = await this.getTxReceipt(txHash)
-    //     if (receipt) {
-    //       return receipt
-    //     }
-    //     await sleep(2000)
-    //   } catch (e) {
-    //     throw e
-    //   }
-    // }
-    // throw new Error('Request timed out')
     let txReceipt: undefined | TransactionReceipt
     let txHash: undefined | string
     const response = await functionCall
@@ -118,6 +118,18 @@ export default class Common {
     gasPrice = 10000000000,
     args
   }: Execute) => {
+    if (this.isOldWeb3) {
+      return this.InjectedDeploy({
+        abi,
+        code,
+        from,
+        gas,
+        args
+      }) as Promise<{
+        txHash: any;
+        txReceipt: any;
+      }>
+    }
     const contract = new (this.web3.eth.Contract as any)(abi)
     return this.getResponseWhenMined(
       contract
@@ -137,5 +149,94 @@ export default class Common {
   }
   estimateGas = async (params: TxParameters): Promise<number> => {
     return this.web3.eth.estimateGas(params)
+  }
+
+  // InjectedGetResponseWhenMined = async (txHash: string) => {
+  //   const maxTries = 40
+  //   let tries = 0
+  //   while (tries < maxTries) {
+  //     tries++
+  //     try {
+  //       if (process.env.NODE_ENV !== 'production') {
+  //         console.log('checking...')
+  //       }
+  //       let receipt = await this.getTxReceipt(txHash)
+  //       if (receipt) {
+  //         return receipt
+  //       }
+  //       await sleep(5000)
+  //     } catch (e) {
+  //       throw e
+  //     }
+  //   }
+  //   throw new Error('Request timed out')
+  // }
+
+  InjectedWeb3DeployContract = async ({
+    abi,
+    code,
+    from,
+    gas,
+    args
+  }: Execute) => {
+    return new Promise((resolve, reject) => {
+      if (args && args.length > 0) {
+        this.web3.eth.contract(abi).new(
+          args,
+          {
+            from,
+            data: code,
+            gas
+          },
+          (err: any, contract: any) => {
+            if (err) {
+              reject(err)
+            } else if (contract && contract.address) {
+              resolve({
+                txHash: contract.transactionHash,
+                txReceipt: this.web3.eth.getTransactionReceipt(
+                  contract.transactionHash
+                )
+              })
+            }
+          }
+        )
+      } else {
+        this.web3.eth.contract(abi).new(
+          {
+            from,
+            data: code,
+            gas
+          },
+          (err: any, contract: any) => {
+            if (err) {
+              reject(err)
+            } else if (contract && contract.address) {
+              resolve({
+                txHash: contract.transactionHash,
+                txReceipt: this.web3.eth.getTransactionReceipt(
+                  contract.transactionHash
+                )
+              })
+            }
+          }
+        )
+      }
+    })
+  }
+
+  InjectedDeploy = async ({ abi, code, from, gas, args }: Execute) => {
+    try {
+      const deployedContract = await this.InjectedWeb3DeployContract({
+        abi,
+        code,
+        from,
+        gas,
+        args
+      })
+      return deployedContract
+    } catch (e) {
+      throw e
+    }
   }
 }
