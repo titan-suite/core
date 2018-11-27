@@ -20,9 +20,9 @@ const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };
 class Common {
-    constructor(isInjected, web3) {
+    constructor(isOldWeb3, web3) {
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
-            if (this.isInjected) {
+            if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     return resolve(yield this.web3.eth.accounts);
                 }));
@@ -30,13 +30,13 @@ class Common {
             return this.web3.eth.getAccounts();
         });
         this.getBalance = (address) => __awaiter(this, void 0, void 0, function* () {
-            if (this.isInjected) {
+            if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => {
                     this.web3.eth.getBalance(address, (err, bal) => {
                         if (err) {
                             return reject(err);
                         }
-                        return resolve(web3Utils.fromWei(`${bal}`, 'ether'));
+                        return resolve(web3Utils.fromWei(`${bal}`));
                     });
                 });
             }
@@ -88,7 +88,7 @@ class Common {
             };
         });
         this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
-            if (this.isInjected) {
+            if (this.isOldWeb3) {
                 return this.InjectedDeploy({
                     abi,
                     code,
@@ -188,7 +188,7 @@ class Common {
                 throw e;
             }
         });
-        this.isInjected = isInjected;
+        this.isOldWeb3 = isOldWeb3;
         this.web3 = web3;
     }
 }

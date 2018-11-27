@@ -15,11 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Web3 = require('aion-web3');
 const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
-    constructor(nodeAddress, isInjected = false, web3) {
-        super(isInjected, isInjected ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+    constructor(nodeAddress, isOldWeb3 = false, web3) {
+        super(isOldWeb3, isOldWeb3 ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
-            console.log(this.isInjected);
-            if (this.isInjected) {
+            if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => {
                     this.web3.eth.compile.solidity(contract, (err, res) => {
                         if (err) {
@@ -37,7 +36,7 @@ class Aion extends common_1.default {
             return this.web3.eth.compileSolidity(contract);
         });
         this.unlock = (address, password, duration = 100000) => __awaiter(this, void 0, void 0, function* () {
-            if (this.isInjected) {
+            if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => {
                     this.web3.personal
                         ? this.web3.personal.unlockAccount(address, password, duration, (err, isUnlocked) => {
