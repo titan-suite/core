@@ -22,9 +22,9 @@ export interface Execute {
     args?: any[];
 }
 export default class Common {
-    isInjected: boolean;
+    isOldWeb3: boolean;
     web3: any;
-    constructor(isInjected: boolean, web3: any);
+    constructor(isOldWeb3: boolean, web3: any);
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{

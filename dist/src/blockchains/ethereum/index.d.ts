@@ -1,7 +1,4 @@
 import Common from '../../common';
 export default class Ethereum extends Common {
-    constructor(nodeAddress: string, isInjected?: boolean, web3?: any);
-    compile: (contract: string) => Promise<{
-        [key: string]: any;
-    }>;
+    constructor(nodeAddress: string, isOldWeb3?: boolean, web3?: any);
 }
