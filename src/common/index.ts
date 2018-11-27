@@ -138,4 +138,10 @@ export default class Common {
   estimateGas = async (params: TxParameters): Promise<number> => {
     return this.web3.eth.estimateGas(params)
   }
+  convertParams = (params: any[], length: number) => {
+    let res = params.map(arg =>
+      this.web3.utils.padLeft(this.web3.utils.toHex(arg).substring(2), length)
+    )
+    return res
+  }
 }
