@@ -17,6 +17,9 @@ const common_1 = __importDefault(require("../../common"));
 class Aion extends common_1.default {
     constructor(nodeAddress, isOldWeb3 = false, web3) {
         super(isOldWeb3, isOldWeb3 ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)));
+        this.isMainnet = () => __awaiter(this, void 0, void 0, function* () {
+            return (yield this.getNetworkId()) === 256;
+        });
         this.compile = (contract) => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => {

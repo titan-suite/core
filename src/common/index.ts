@@ -1,8 +1,5 @@
 import * as web3Utils from 'web3-utils'
 import { TransactionReceipt } from 'ethereum-types'
-// const sleep = (ms: number) => {
-//   return new Promise(resolve => setTimeout(resolve, ms))
-// }
 export interface Params {
   to?: string
   value?: number | string
@@ -41,9 +38,8 @@ export default class Common {
     this.web3 = web3
   }
 
-  isMainnet = async (): Promise<boolean> => {
-    const networkId = await this.web3.eth.net.getId()
-    return networkId === 256
+  getNetworkId = async (): Promise<number> => {
+    return this.web3.eth.net.getId()
   }
 
   getAccounts = async (): Promise<string[]> => {
@@ -131,7 +127,7 @@ export default class Common {
 
   deploy = async ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }: Execute) => {
     if (this.isOldWeb3) {
-      return this.InjectedDeploy({
+      return this.oldWeb3Deploy({
         abi,
         code,
         from,
@@ -180,7 +176,7 @@ export default class Common {
       })
     }) as Promise<SignedMessage>
   }
-  // InjectedGetResponseWhenMined = async (txHash: string) => {
+  // oldWeb3GetResponseWhenMined = async (txHash: string) => {
   //   const maxTries = 40
   //   let tries = 0
   //   while (tries < maxTries) {
@@ -201,7 +197,7 @@ export default class Common {
   //   throw new Error('Request timed out')
   // }
 
-  InjectedWeb3DeployContract = async ({ abi, code, from, gas, args }: Execute) => {
+  oldWeb3Deploy = async ({ abi, code, from, gas, args }: Execute) => {
     return new Promise((resolve, reject) => {
       if (args && args.length > 0) {
         this.web3.eth.contract(abi).new(
@@ -242,20 +238,5 @@ export default class Common {
         )
       }
     })
-  }
-
-  InjectedDeploy = async ({ abi, code, from, gas, args }: Execute) => {
-    try {
-      const deployedContract = await this.InjectedWeb3DeployContract({
-        abi,
-        code,
-        from,
-        gas,
-        args,
-      })
-      return deployedContract
-    } catch (e) {
-      throw e
-    }
   }
 }

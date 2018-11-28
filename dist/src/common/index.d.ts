@@ -30,7 +30,7 @@ export default class Common {
     isOldWeb3: boolean;
     web3: any;
     constructor(isOldWeb3: boolean, web3: any);
-    isMainnet: () => Promise<boolean>;
+    getNetworkId: () => Promise<number>;
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
@@ -60,6 +60,5 @@ export default class Common {
     estimateGas: (params: TxParameters) => Promise<number>;
     encodeArguments: (params: any[], length: number) => any[];
     signTransaction: (rawTx: Params, privateKey: string) => Promise<SignedMessage>;
-    InjectedWeb3DeployContract: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
-    InjectedDeploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
+    oldWeb3Deploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
 }

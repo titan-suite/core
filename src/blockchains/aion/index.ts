@@ -7,6 +7,10 @@ export default class Aion extends Common {
     super(isOldWeb3, isOldWeb3 ? web3 : new Web3(new Web3.providers.HttpProvider(nodeAddress)))
   }
 
+  isMainnet = async (): Promise<boolean> => {
+    return (await this.getNetworkId()) === 256
+  }
+
   compile = async (contract: string): Promise<{ [key: string]: any }> => {
     if (this.isOldWeb3) {
       return new Promise((resolve, reject) => {

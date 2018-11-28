@@ -90,6 +90,10 @@ describe('Test AION class methods', () => {
     expect(num).to.equal('4')
   }).timeout(0)
 
+  it('expect mainnet id to equal 1', async () => {
+    expect(await aionMainnet.isMainnet()).to.equal(true)
+  }).timeout(0)
+
   it('should deploy a contract as a signed transaction to the mainnet', async () => {
     const compiled = await aionMainnet.compile(WithConstructorContract.sol)
     const code = compiled[WithConstructorContract.name].code

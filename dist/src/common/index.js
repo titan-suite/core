@@ -18,9 +18,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const web3Utils = __importStar(require("web3-utils"));
 class Common {
     constructor(isOldWeb3, web3) {
-        this.isMainnet = () => __awaiter(this, void 0, void 0, function* () {
-            const networkId = yield this.web3.eth.net.getId();
-            return networkId === 256;
+        this.getNetworkId = () => __awaiter(this, void 0, void 0, function* () {
+            return this.web3.eth.net.getId();
         });
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
@@ -99,7 +98,7 @@ class Common {
         });
         this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
-                return this.InjectedDeploy({
+                return this.oldWeb3Deploy({
                     abi,
                     code,
                     from,
@@ -139,7 +138,7 @@ class Common {
                 });
             });
         };
-        // InjectedGetResponseWhenMined = async (txHash: string) => {
+        // oldWeb3GetResponseWhenMined = async (txHash: string) => {
         //   const maxTries = 40
         //   let tries = 0
         //   while (tries < maxTries) {
@@ -159,7 +158,7 @@ class Common {
         //   }
         //   throw new Error('Request timed out')
         // }
-        this.InjectedWeb3DeployContract = ({ abi, code, from, gas, args }) => __awaiter(this, void 0, void 0, function* () {
+        this.oldWeb3Deploy = ({ abi, code, from, gas, args }) => __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 if (args && args.length > 0) {
                     this.web3.eth.contract(abi).new(args, {
@@ -196,21 +195,6 @@ class Common {
                     });
                 }
             });
-        });
-        this.InjectedDeploy = ({ abi, code, from, gas, args }) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const deployedContract = yield this.InjectedWeb3DeployContract({
-                    abi,
-                    code,
-                    from,
-                    gas,
-                    args,
-                });
-                return deployedContract;
-            }
-            catch (e) {
-                throw e;
-            }
         });
         this.isOldWeb3 = isOldWeb3;
         this.web3 = web3;
