@@ -61,4 +61,8 @@ export default class Common {
     encodeArguments: (params: any[], length: number) => any[];
     signTransaction: (rawTx: Params, privateKey: string) => Promise<SignedMessage>;
     oldWeb3Deploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
+    newAccount: () => Promise<{
+        privateKey: any;
+        address: any;
+    }>;
 }

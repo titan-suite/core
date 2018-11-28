@@ -196,6 +196,10 @@ class Common {
                 }
             });
         });
+        this.newAccount = () => __awaiter(this, void 0, void 0, function* () {
+            const { privateKey, address } = yield this.web3.eth.accounts.create();
+            return { privateKey, address };
+        });
         this.isOldWeb3 = isOldWeb3;
         this.web3 = web3;
     }

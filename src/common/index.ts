@@ -66,9 +66,7 @@ export default class Common {
     return web3Utils.fromWei(balance, 'ether')
   }
 
-  getBalancesWithAccounts = async (): Promise<
-    Array<{ address: string; etherBalance: number }>
-  > => {
+  getBalancesWithAccounts = async (): Promise<Array<{ address: string; etherBalance: number }>> => {
     const addresses = await this.getAccounts()
     if (!addresses) {
       return []
@@ -78,7 +76,7 @@ export default class Common {
       const etherBalance = await this.getBalance(address)
       accounts.push({
         address,
-        etherBalance: Number(etherBalance)
+        etherBalance: Number(etherBalance),
       })
     }
     return accounts
@@ -93,9 +91,7 @@ export default class Common {
   }
 
   sendSignedTransaction = (rawTransaction: string) => {
-    return this.getResponseWhenMined(
-      this.web3.eth.sendSignedTransaction(rawTransaction)
-    )
+    return this.getResponseWhenMined(this.web3.eth.sendSignedTransaction(rawTransaction))
   }
 
   getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
@@ -117,39 +113,29 @@ export default class Common {
         txHash = TxHash
         console.log({ txHash })
       })
-      .on(
-        'confirmation',
-        (confirmationNumber: number, receipt: TransactionReceipt) => {
-          confirmation = confirmationNumber
-          txReceipt = receipt
-        }
-      )
+      .on('confirmation', (confirmationNumber: number, receipt: TransactionReceipt) => {
+        confirmation = confirmationNumber
+        txReceipt = receipt
+      })
     return {
       confirmation,
       txReceipt,
       txHash,
-      response
+      response,
     }
   }
 
-  deploy = async ({
-    code,
-    abi,
-    from,
-    gas = 5000000,
-    gasPrice = 10000000000,
-    args
-  }: Execute) => {
+  deploy = async ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }: Execute) => {
     if (this.isOldWeb3) {
       return this.oldWeb3Deploy({
         abi,
         code,
         from,
         gas,
-        args
+        args,
       }) as Promise<{
-        txHash: any;
-        txReceipt: any;
+        txHash: any
+        txReceipt: any
       }>
     }
     const contract = new (this.web3.eth.Contract as any)(abi)
@@ -157,12 +143,12 @@ export default class Common {
       contract
         .deploy({
           data: code,
-          arguments: args
+          arguments: args,
         })
         .send({
           from,
           gas,
-          gasPrice
+          gasPrice,
         })
     )
   }
@@ -176,27 +162,18 @@ export default class Common {
   }
 
   encodeArguments = (params: any[], length: number) => {
-    let res = params.map(arg =>
-      this.web3.utils.padLeft(this.web3.utils.toHex(arg).substring(2), length)
-    )
+    let res = params.map(arg => this.web3.utils.padLeft(this.web3.utils.toHex(arg).substring(2), length))
     return res
   }
 
-  signTransaction = (
-    rawTx: Params,
-    privateKey: string
-  ): Promise<SignedMessage> => {
+  signTransaction = (rawTx: Params, privateKey: string): Promise<SignedMessage> => {
     return new Promise((resolve, reject) => {
-      this.web3.eth.accounts.signTransaction(
-        rawTx,
-        privateKey,
-        (err: any, signed: SignedMessage) => {
-          if (err) {
-            return reject(err)
-          }
-          return resolve(signed)
+      this.web3.eth.accounts.signTransaction(rawTx, privateKey, (err: any, signed: SignedMessage) => {
+        if (err) {
+          return reject(err)
         }
-      )
+        return resolve(signed)
+      })
     }) as Promise<SignedMessage>
   }
   // oldWeb3GetResponseWhenMined = async (txHash: string) => {
@@ -228,7 +205,7 @@ export default class Common {
           {
             from,
             data: code,
-            gas
+            gas,
           },
           (err: any, contract: any) => {
             if (err) {
@@ -236,9 +213,7 @@ export default class Common {
             } else if (contract && contract.address) {
               resolve({
                 txHash: contract.transactionHash,
-                txReceipt: this.web3.eth.getTransactionReceipt(
-                  contract.transactionHash
-                )
+                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
               })
             }
           }
@@ -248,7 +223,7 @@ export default class Common {
           {
             from,
             data: code,
-            gas
+            gas,
           },
           (err: any, contract: any) => {
             if (err) {
@@ -256,9 +231,7 @@ export default class Common {
             } else if (contract && contract.address) {
               resolve({
                 txHash: contract.transactionHash,
-                txReceipt: this.web3.eth.getTransactionReceipt(
-                  contract.transactionHash
-                )
+                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
               })
             }
           }
