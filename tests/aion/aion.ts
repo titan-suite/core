@@ -22,7 +22,9 @@ describe('Test AION class methods', () => {
   let mainnetContractAddress: any
   let masteryContractInstance: any
   let masteryContractAddress: any
-
+  let compiled: any
+  let abi: any
+  let code: any
   it('get all accounts', async () => {
     accounts = await aion.getAccounts()
     expect(accounts)
@@ -64,22 +66,20 @@ describe('Test AION class methods', () => {
     const sol =
       'pragma solidity ^0.4.9; contract Demo { address owner; uint public test; function Demo(uint t) public { owner = msg.sender; test = t; } }'
     const response = await aion.compile(sol)
-    const code = response['Demo'].code
     const estimatedGas = await aion.estimateGas({
-      data: code,
+      data: await response['Demo'].code,
       from: accounts[0],
       gas: 2000000,
     })
     expect(estimatedGas)
       .be.a('number')
       .to.be.greaterThan(20000)
-    expect(code).to.be.an('string')
   }).timeout(0)
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
-    const compiled = await aion.compile(WithConstructorContract.sol)
-    const abi = compiled[WithConstructorContract.name].info.abiDefinition
-    const code = compiled[WithConstructorContract.name].code
+    compiled = await aion.compile(WithConstructorContract.sol)
+    abi = compiled[WithConstructorContract.name].info.abiDefinition
+    code = compiled[WithConstructorContract.name].code
     const res: any = await aion.deploy({
       abi,
       code,
@@ -98,109 +98,71 @@ describe('Test AION class methods', () => {
   }).timeout(0)
 
   it('set value of num and expect add result to be 4', async () => {
-    const res: any = await aion.getResponseWhenMined(contractInstance.methods.setA(2).send({ from: accounts[0], gas: 2000000 }))
+    const res: any = await aion.executeContractFunction({ func: contractInstance.methods.setA(2), from: accounts[0] })
     const num = await contractInstance.methods.add(2).call({ from: accounts[0] })
     expect(res.txReceipt.transactionHash).to.equal(res.txHash)
     expect(num).to.equal('4')
   }).timeout(0)
 
   it('should deploy a contract as a signed transaction to the mainnet', async () => {
-    const compiled = await aionMainnet.compile(WithConstructorContract.sol)
-    const code = compiled[WithConstructorContract.name].code
-    const args = ['15']
-    const data = code + aionMainnet.encodeArguments(args, 32)
-
-    const gasPrice = await aionMainnet.web3.eth.gasPrice
-    const rawTx = {
+    const res = await aionMainnet.deploy({
+      code,
+      args: ['15'],
       from: testAccount2.address,
-      data,
-      gas: 2000000,
-      gasPrice,
-    }
-
-    const signedTx = await aionMainnet.signTransaction(rawTx, testAccount2.privateKey)
-    const { txReceipt } = await aionMainnet.sendSignedTransaction(signedTx.rawTransaction)
-    mainnetContractAddress = txReceipt!.contractAddress
-    expect(mainnetContractAddress).to.not.be.null
+      gasPrice: await aionMainnet.web3.eth.gasPrice,
+      privateKey: testAccount2.privateKey,
+    })
+    mainnetContractAddress = res.txReceipt.contractAddress
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
   }).timeout(0)
 
   it('should send a signed transaction to a contract on the mainnet', async () => {
-    const compiled = await aionMainnet.compile(WithConstructorContract.sol)
-    const abi: any = compiled[WithConstructorContract.name].info.abiDefinition
-    const address: string = mainnetContractAddress
-    mainnetContractInstance = new aionMainnet.web3.eth.Contract(abi, address)
-    const data = await mainnetContractInstance.methods.setA(5).encodeABI()
-    const rawTx = {
-      to: address,
-      data,
+    mainnetContractInstance = new aionMainnet.web3.eth.Contract(abi, mainnetContractAddress)
+    const res: any = await aionMainnet.executeContractFunction({
+      func: mainnetContractInstance.methods.setA(5),
+      to: mainnetContractAddress,
       gas: 2000000,
-      // gasPrice
-    }
-
-    const signedTx = await aionMainnet.signTransaction(rawTx, testAccount2.privateKey)
-    const { txReceipt } = await aionMainnet.sendSignedTransaction(signedTx.rawTransaction)
-    expect(txReceipt!.logs).to.not.be.empty
+      privateKey: testAccount2.privateKey,
+    })
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
   }).timeout(0)
 
   it('should call a function in the contract on the mainnet', async () => {
-    const compiled = await aionMainnet.compile(WithConstructorContract.sol)
-    const abi: any = compiled[WithConstructorContract.name].info.abiDefinition
     let address: string = mainnetContractAddress
     mainnetContractInstance = new aionMainnet.web3.eth.Contract(abi, address)
-
-    const val = await mainnetContractInstance.methods.num().call({ from: testAccount1.address })
-
-    expect(val).to.not.equal(0)
+    const num = await mainnetContractInstance.methods.num().call({ from: testAccount1.address })
+    expect(num).to.equal('5')
   }).timeout(0)
 
   it('should deploy a contract as a signed transaction to the testnet (mastery)', async () => {
-    const compiled = await aionMastery.compile(WithConstructorContract.sol)
-    const code = compiled[WithConstructorContract.name].code
-    const args = ['15']
-    const data = code + aionMastery.encodeArguments(args, 32)
-
-    const gasPrice = await aionMastery.web3.eth.gasPrice
-    const rawTx = {
-      from: testAccount2.address,
-      data,
+    const res: any = await aionMastery.deploy({
+      code,
+      args: ['15'],
       gas: 2000000,
-      gasPrice,
-    }
-
-    const signedTx = await aionMastery.signTransaction(rawTx, testAccount2.privateKey)
-    const { txReceipt } = await aionMastery.sendSignedTransaction(signedTx.rawTransaction)
-    masteryContractAddress = txReceipt!.contractAddress
-    console.log(masteryContractAddress)
+      from: testAccount2.address,
+      gasPrice: await aionMastery.web3.eth.gasPrice,
+      privateKey: testAccount2.privateKey,
+    })
+    masteryContractAddress = res.txReceipt.contractAddress
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
     expect(masteryContractAddress).to.not.be.null
-    expect(txReceipt!.status).to.equal(true)
+    expect(res.txReceipt.status).to.equal(true)
   }).timeout(0)
 
   it('should send a signed transaction to a contract on the testnet (mastery) ', async () => {
-    const compiled = await aionMastery.compile(WithConstructorContract.sol)
-    const abi: any = compiled[WithConstructorContract.name].info.abiDefinition
-    const address: string = masteryContractAddress
-    masteryContractInstance = new aionMastery.web3.eth.Contract(abi, address)
-    const data = await masteryContractInstance.methods.setA(5).encodeABI()
-    const rawTx = {
-      to: address,
-      data,
+    masteryContractInstance = new aionMastery.web3.eth.Contract(abi, masteryContractAddress)
+    const res: any = await aionMastery.executeContractFunction({
+      func: masteryContractInstance.methods.setA(5),
+      to: masteryContractAddress,
       gas: 2000000,
-      // gasPrice
-    }
-
-    const signedTx = await aionMastery.signTransaction(rawTx, testAccount1.privateKey)
-    const { txReceipt } = await aionMastery.sendSignedTransaction(signedTx.rawTransaction)
-    expect(txReceipt!.logs).to.not.be.empty
+      privateKey: testAccount2.privateKey,
+    })
+    expect(res.txReceipt.transactionHash).to.equal(res.txHash)
   }).timeout(0)
 
   it('should call a function in the contract on the testnet (mastery) ', async () => {
-    const compiled = await aionMastery.compile(WithConstructorContract.sol)
-    const abi: any = compiled[WithConstructorContract.name].info.abiDefinition
-    let address: string = masteryContractAddress
-    masteryContractInstance = new aionMastery.web3.eth.Contract(abi, address)
-
-    const val = await masteryContractInstance.methods.num().call({ from: testAccount1.address })
-
-    expect(val).to.not.equal(0)
+    masteryContractInstance = new aionMastery.web3.eth.Contract(abi, masteryContractAddress)
+    const num = await masteryContractInstance.methods.num().call({ from: testAccount1.address })
+    expect(num).to.equal('15')
   }).timeout(0)
 })

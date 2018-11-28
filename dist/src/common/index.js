@@ -96,7 +96,7 @@ class Common {
                 response,
             };
         });
-        this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
+        this.deploy = ({ code, abi, from, gas = 2000000, gasPrice = 10000000000, args, privateKey }) => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
                 return this.oldWeb3Deploy({
                     abi,
@@ -105,6 +105,15 @@ class Common {
                     gas,
                     args,
                 });
+            }
+            if (privateKey) {
+                const { rawTransaction } = yield this.signTransaction({
+                    from,
+                    data: code + (yield this.encodeArguments(args, 32)),
+                    gas,
+                    gasPrice,
+                }, privateKey);
+                return this.sendSignedTransaction(rawTransaction);
             }
             const contract = new this.web3.eth.Contract(abi);
             return this.getResponseWhenMined(contract
@@ -121,6 +130,22 @@ class Common {
         this.getContract = (abi, address) => {
             return new this.web3.eth.Contract(abi, address);
         };
+        this.executeContractFunction = ({ func, to, from, gas = 2000000, gasPrice, value, privateKey }) => __awaiter(this, void 0, void 0, function* () {
+            if (privateKey) {
+                const data = yield func.encodeABI();
+                const { rawTransaction } = yield this.signTransaction({
+                    to,
+                    data,
+                    gas,
+                }, privateKey);
+                return this.sendSignedTransaction(rawTransaction);
+            }
+            return this.getResponseWhenMined(func.send({
+                from,
+                gas,
+                value,
+            }));
+        });
         this.estimateGas = (params) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.estimateGas(params);
         });

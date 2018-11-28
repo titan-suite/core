@@ -14,14 +14,19 @@ export interface TxParameters extends Params {
 export interface CallParameters extends Params {
   from?: string
 }
+export interface ExecuteContractFunction extends CallParameters {
+  privateKey?: string
+  func: any
+}
 
 export interface Execute {
   code: string
-  abi: any[]
+  abi?: any[]
   from: string
   gas?: number
   gasPrice?: number
   args?: any[]
+  privateKey?: string
 }
 
 export interface SignedMessage {
@@ -125,7 +130,7 @@ export default class Common {
     }
   }
 
-  deploy = async ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }: Execute) => {
+  deploy = async ({ code, abi, from, gas = 2000000, gasPrice = 10000000000, args, privateKey }: Execute) => {
     if (this.isOldWeb3) {
       return this.oldWeb3Deploy({
         abi,
@@ -137,6 +142,18 @@ export default class Common {
         txHash: any
         txReceipt: any
       }>
+    }
+    if (privateKey) {
+      const { rawTransaction } = await this.signTransaction(
+        {
+          from,
+          data: code + (await this.encodeArguments(args!, 32)),
+          gas,
+          gasPrice,
+        },
+        privateKey
+      )
+      return this.sendSignedTransaction(rawTransaction)
     }
     const contract = new (this.web3.eth.Contract as any)(abi)
     return this.getResponseWhenMined(
@@ -157,6 +174,29 @@ export default class Common {
     return new (this.web3.eth.Contract as any)(abi, address)
   }
 
+  executeContractFunction = async ({ func, to, from, gas = 2000000, gasPrice, value, privateKey }: ExecuteContractFunction) => {
+    if (privateKey) {
+      const data = await func.encodeABI()
+      const { rawTransaction } = await this.signTransaction(
+        {
+          to,
+          data,
+          gas,
+          // gasPrice
+        },
+        privateKey
+      )
+      return this.sendSignedTransaction(rawTransaction)
+    }
+    return this.getResponseWhenMined(
+      func.send({
+        from,
+        gas,
+        value, // TODO check unit
+      })
+    )
+  }
+
   estimateGas = async (params: TxParameters): Promise<number> => {
     return this.web3.eth.estimateGas(params)
   }
@@ -166,7 +206,7 @@ export default class Common {
     return res
   }
 
-  signTransaction = (rawTx: Params, privateKey: string): Promise<SignedMessage> => {
+  signTransaction = (rawTx: CallParameters, privateKey: string): Promise<SignedMessage> => {
     return new Promise((resolve, reject) => {
       this.web3.eth.accounts.signTransaction(rawTx, privateKey, (err: any, signed: SignedMessage) => {
         if (err) {

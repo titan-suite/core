@@ -13,13 +13,18 @@ export interface TxParameters extends Params {
 export interface CallParameters extends Params {
     from?: string;
 }
+export interface ExecuteContractFunction extends CallParameters {
+    privateKey?: string;
+    func: any;
+}
 export interface Execute {
     code: string;
-    abi: any[];
+    abi?: any[];
     from: string;
     gas?: number;
     gasPrice?: number;
     args?: any[];
+    privateKey?: string;
 }
 export interface SignedMessage {
     messageHash: string;
@@ -52,14 +57,20 @@ export default class Common {
         txHash: string | undefined;
         response: any;
     }>;
-    deploy: ({ code, abi, from, gas, gasPrice, args }: Execute) => Promise<{
+    deploy: ({ code, abi, from, gas, gasPrice, args, privateKey }: Execute) => Promise<{
         txHash: any;
         txReceipt: any;
     }>;
     getContract: (abi: any[], address: string) => any;
+    executeContractFunction: ({ func, to, from, gas, gasPrice, value, privateKey }: ExecuteContractFunction) => Promise<{
+        confirmation: number | undefined;
+        txReceipt: TransactionReceipt | undefined;
+        txHash: string | undefined;
+        response: any;
+    }>;
     estimateGas: (params: TxParameters) => Promise<number>;
     encodeArguments: (params: any[], length: number) => any[];
-    signTransaction: (rawTx: Params, privateKey: string) => Promise<SignedMessage>;
+    signTransaction: (rawTx: CallParameters, privateKey: string) => Promise<SignedMessage>;
     oldWeb3Deploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
     newAccount: () => Promise<{
         privateKey: any;
