@@ -27,12 +27,23 @@ export interface Execute {
   args?: any[]
 }
 
+export interface SignedMessage {
+  messageHash: string
+  signature: string
+  rawTransaction: string
+}
+
 export default class Common {
   public isOldWeb3: boolean
   public web3: any
   constructor(isOldWeb3: boolean, web3: any) {
     this.isOldWeb3 = isOldWeb3
     this.web3 = web3
+  }
+
+  isMainnet = async (): Promise<boolean> => {
+    const networkId = await this.web3.eth.net.getId()
+    return networkId === 256
   }
 
   getAccounts = async (): Promise<string[]> => {
@@ -85,6 +96,12 @@ export default class Common {
     return this.web3.eth.sendTransaction(params)
   }
 
+  sendSignedTransaction = (rawTransaction: string) => {
+    return this.getResponseWhenMined(
+      this.web3.eth.sendSignedTransaction(rawTransaction)
+    )
+  }
+
   getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
     return this.web3.eth.getTransactionReceipt(txHash)
   }
@@ -92,6 +109,7 @@ export default class Common {
   getResponseWhenMined = async (functionCall: any) => {
     let txReceipt: undefined | TransactionReceipt
     let txHash: undefined | string
+    let confirmation: undefined | number
     const response = await functionCall
       .on('receipt', (Receipt: TransactionReceipt) => {
         txReceipt = Receipt
@@ -103,7 +121,15 @@ export default class Common {
         txHash = TxHash
         console.log({ txHash })
       })
+      .on(
+        'confirmation',
+        (confirmationNumber: number, receipt: TransactionReceipt) => {
+          confirmation = confirmationNumber
+          txReceipt = receipt
+        }
+      )
     return {
+      confirmation,
       txReceipt,
       txHash,
       response
@@ -144,17 +170,38 @@ export default class Common {
         })
     )
   }
+
   getContract = (abi: any[], address: string) => {
     return new (this.web3.eth.Contract as any)(abi, address)
   }
+
   estimateGas = async (params: TxParameters): Promise<number> => {
     return this.web3.eth.estimateGas(params)
   }
-  convertParams = (params: any[], length: number) => {
+
+  encodeArguments = (params: any[], length: number) => {
     let res = params.map(arg =>
       this.web3.utils.padLeft(this.web3.utils.toHex(arg).substring(2), length)
     )
     return res
+  }
+
+  signTransaction = (
+    rawTx: Params,
+    privateKey: string
+  ): Promise<SignedMessage> => {
+    return new Promise((resolve, reject) => {
+      this.web3.eth.accounts.signTransaction(
+        rawTx,
+        privateKey,
+        (err: any, signed: SignedMessage) => {
+          if (err) {
+            return reject(err)
+          }
+          return resolve(signed)
+        }
+      )
+    }) as Promise<SignedMessage>
   }
   // InjectedGetResponseWhenMined = async (txHash: string) => {
   //   const maxTries = 40
