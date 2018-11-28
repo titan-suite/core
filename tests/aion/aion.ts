@@ -109,7 +109,6 @@ describe('Test AION class methods', () => {
       code,
       args: ['15'],
       from: testAccount2.address,
-      gasPrice: await aionMainnet.web3.eth.gasPrice,
       privateKey: testAccount2.privateKey,
     })
     mainnetContractAddress = res.txReceipt.contractAddress
@@ -140,7 +139,6 @@ describe('Test AION class methods', () => {
       args: ['15'],
       gas: 2000000,
       from: testAccount2.address,
-      gasPrice: await aionMastery.web3.eth.gasPrice,
       privateKey: testAccount2.privateKey,
     })
     masteryContractAddress = res.txReceipt.contractAddress

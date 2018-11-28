@@ -111,7 +111,7 @@ class Common {
                     from,
                     data: code + (yield this.encodeArguments(args, 32)),
                     gas,
-                    gasPrice,
+                    gasPrice: yield this.web3.eth.gasPrice,
                 }, privateKey);
                 return this.sendSignedTransaction(rawTransaction);
             }

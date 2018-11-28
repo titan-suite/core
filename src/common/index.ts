@@ -149,7 +149,7 @@ export default class Common {
           from,
           data: code + (await this.encodeArguments(args!, 32)),
           gas,
-          gasPrice,
+          gasPrice: await this.web3.eth.gasPrice,
         },
         privateKey
       )
