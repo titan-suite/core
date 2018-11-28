@@ -16,11 +16,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const web3Utils = __importStar(require("web3-utils"));
-const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-};
 class Common {
     constructor(isOldWeb3, web3) {
+        this.isMainnet = () => __awaiter(this, void 0, void 0, function* () {
+            const networkId = yield this.web3.eth.net.getId();
+            return networkId === 256;
+        });
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -53,7 +54,7 @@ class Common {
                 const etherBalance = yield this.getBalance(address);
                 accounts.push({
                     address,
-                    etherBalance: Number(etherBalance)
+                    etherBalance: Number(etherBalance),
                 });
             }
             return accounts;
@@ -64,12 +65,16 @@ class Common {
         this.sendTransaction = (params) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.sendTransaction(params);
         });
+        this.sendSignedTransaction = (rawTransaction) => {
+            return this.getResponseWhenMined(this.web3.eth.sendSignedTransaction(rawTransaction));
+        };
         this.getTxReceipt = (txHash) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.getTransactionReceipt(txHash);
         });
         this.getResponseWhenMined = (functionCall) => __awaiter(this, void 0, void 0, function* () {
             let txReceipt;
             let txHash;
+            let confirmation;
             const response = yield functionCall
                 .on('receipt', (Receipt) => {
                 txReceipt = Receipt;
@@ -80,11 +85,16 @@ class Common {
                 .on('transactionHash', (TxHash) => {
                 txHash = TxHash;
                 console.log({ txHash });
+            })
+                .on('confirmation', (confirmationNumber, receipt) => {
+                confirmation = confirmationNumber;
+                txReceipt = receipt;
             });
             return {
+                confirmation,
                 txReceipt,
                 txHash,
-                response
+                response,
             };
         });
         this.deploy = ({ code, abi, from, gas = 5000000, gasPrice = 10000000000, args }) => __awaiter(this, void 0, void 0, function* () {
@@ -94,19 +104,19 @@ class Common {
                     code,
                     from,
                     gas,
-                    args
+                    args,
                 });
             }
             const contract = new this.web3.eth.Contract(abi);
             return this.getResponseWhenMined(contract
                 .deploy({
                 data: code,
-                arguments: args
+                arguments: args,
             })
                 .send({
                 from,
                 gas,
-                gasPrice
+                gasPrice,
             }));
         });
         this.getContract = (abi, address) => {
@@ -115,6 +125,20 @@ class Common {
         this.estimateGas = (params) => __awaiter(this, void 0, void 0, function* () {
             return this.web3.eth.estimateGas(params);
         });
+        this.encodeArguments = (params, length) => {
+            let res = params.map(arg => this.web3.utils.padLeft(this.web3.utils.toHex(arg).substring(2), length));
+            return res;
+        };
+        this.signTransaction = (rawTx, privateKey) => {
+            return new Promise((resolve, reject) => {
+                this.web3.eth.accounts.signTransaction(rawTx, privateKey, (err, signed) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(signed);
+                });
+            });
+        };
         // InjectedGetResponseWhenMined = async (txHash: string) => {
         //   const maxTries = 40
         //   let tries = 0
@@ -141,7 +165,7 @@ class Common {
                     this.web3.eth.contract(abi).new(args, {
                         from,
                         data: code,
-                        gas
+                        gas,
                     }, (err, contract) => {
                         if (err) {
                             reject(err);
@@ -149,7 +173,7 @@ class Common {
                         else if (contract && contract.address) {
                             resolve({
                                 txHash: contract.transactionHash,
-                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
                             });
                         }
                     });
@@ -158,7 +182,7 @@ class Common {
                     this.web3.eth.contract(abi).new({
                         from,
                         data: code,
-                        gas
+                        gas,
                     }, (err, contract) => {
                         if (err) {
                             reject(err);
@@ -166,7 +190,7 @@ class Common {
                         else if (contract && contract.address) {
                             resolve({
                                 txHash: contract.transactionHash,
-                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
                             });
                         }
                     });
@@ -180,7 +204,7 @@ class Common {
                     code,
                     from,
                     gas,
-                    args
+                    args,
                 });
                 return deployedContract;
             }

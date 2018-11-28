@@ -11,11 +11,8 @@ const aionMainnet = new Aion(nodeAddress.aionMainnet)
 const aionMastery = new Aion(nodeAddress.aionMastery)
 
 const WithConstructorContract = {
-  sol: fs.readFileSync(
-    path.resolve(__dirname, 'contracts', 'WithConstructor.sol'),
-    'utf8'
-  ),
-  name: 'WithConstructor'
+  sol: fs.readFileSync(path.resolve(__dirname, 'contracts', 'WithConstructor.sol'), 'utf8'),
+  name: 'WithConstructor',
 }
 
 describe('Test AION class methods', () => {
@@ -57,7 +54,7 @@ describe('Test AION class methods', () => {
     const estimatedGas = await aion.estimateGas({
       data: code,
       from: accounts[0],
-      gas: 2000000
+      gas: 2000000,
     })
     expect(estimatedGas)
       .be.a('number')
@@ -74,7 +71,7 @@ describe('Test AION class methods', () => {
       code,
       from: accounts[0],
       gas: 2000000,
-      args: ['15']
+      args: ['15'],
     })
     contractInstance = res.response
     expect(res.txReceipt.transactionHash).to.equal(res.txHash)
@@ -82,19 +79,13 @@ describe('Test AION class methods', () => {
   }).timeout(0)
 
   it('gets back the value of num', async () => {
-    const num = await contractInstance.methods
-      .getNum()
-      .call({ from: accounts[0] })
+    const num = await contractInstance.methods.getNum().call({ from: accounts[0] })
     expect(num).to.equal('16')
   }).timeout(0)
 
   it('set value of num and expect add result to be 4', async () => {
-    const res: any = await aion.getResponseWhenMined(
-      contractInstance.methods.setA(2).send({ from: accounts[0], gas: 2000000 })
-    )
-    const num = await contractInstance.methods
-      .add(2)
-      .call({ from: accounts[0] })
+    const res: any = await aion.getResponseWhenMined(contractInstance.methods.setA(2).send({ from: accounts[0], gas: 2000000 }))
+    const num = await contractInstance.methods.add(2).call({ from: accounts[0] })
     expect(res.txReceipt.transactionHash).to.equal(res.txHash)
     expect(num).to.equal('4')
   }).timeout(0)
@@ -110,16 +101,11 @@ describe('Test AION class methods', () => {
       from: testAccount2.address,
       data,
       gas: 2000000,
-      gasPrice
+      gasPrice,
     }
 
-    const signedTx = await aionMainnet.signTransaction(
-      rawTx,
-      testAccount2.privateKey
-    )
-    const { txReceipt } = await aionMainnet.sendSignedTransaction(
-      signedTx.rawTransaction
-    )
+    const signedTx = await aionMainnet.signTransaction(rawTx, testAccount2.privateKey)
+    const { txReceipt } = await aionMainnet.sendSignedTransaction(signedTx.rawTransaction)
     mainnetContractAddress = txReceipt!.contractAddress
     expect(mainnetContractAddress).to.not.be.null
   }).timeout(0)
@@ -133,17 +119,12 @@ describe('Test AION class methods', () => {
     const rawTx = {
       to: address,
       data,
-      gas: 2000000
+      gas: 2000000,
       // gasPrice
     }
 
-    const signedTx = await aionMainnet.signTransaction(
-      rawTx,
-      testAccount2.privateKey
-    )
-    const { txReceipt } = await aionMainnet.sendSignedTransaction(
-      signedTx.rawTransaction
-    )
+    const signedTx = await aionMainnet.signTransaction(rawTx, testAccount2.privateKey)
+    const { txReceipt } = await aionMainnet.sendSignedTransaction(signedTx.rawTransaction)
     expect(txReceipt!.logs).to.not.be.empty
   }).timeout(0)
 
@@ -153,9 +134,7 @@ describe('Test AION class methods', () => {
     let address: string = mainnetContractAddress
     mainnetContractInstance = new aionMainnet.web3.eth.Contract(abi, address)
 
-    const val = await mainnetContractInstance.methods
-      .num()
-      .call({ from: testAccount1.address })
+    const val = await mainnetContractInstance.methods.num().call({ from: testAccount1.address })
 
     expect(val).to.not.equal(0)
   }).timeout(0)
@@ -171,16 +150,11 @@ describe('Test AION class methods', () => {
       from: testAccount2.address,
       data,
       gas: 2000000,
-      gasPrice
+      gasPrice,
     }
 
-    const signedTx = await aionMastery.signTransaction(
-      rawTx,
-      testAccount2.privateKey
-    )
-    const { txReceipt } = await aionMastery.sendSignedTransaction(
-      signedTx.rawTransaction
-    )
+    const signedTx = await aionMastery.signTransaction(rawTx, testAccount2.privateKey)
+    const { txReceipt } = await aionMastery.sendSignedTransaction(signedTx.rawTransaction)
     masteryContractAddress = txReceipt!.contractAddress
     console.log(masteryContractAddress)
     expect(masteryContractAddress).to.not.be.null
@@ -196,17 +170,12 @@ describe('Test AION class methods', () => {
     const rawTx = {
       to: address,
       data,
-      gas: 2000000
+      gas: 2000000,
       // gasPrice
     }
 
-    const signedTx = await aionMastery.signTransaction(
-      rawTx,
-      testAccount1.privateKey
-    )
-    const { txReceipt } = await aionMastery.sendSignedTransaction(
-      signedTx.rawTransaction
-    )
+    const signedTx = await aionMastery.signTransaction(rawTx, testAccount1.privateKey)
+    const { txReceipt } = await aionMastery.sendSignedTransaction(signedTx.rawTransaction)
     expect(txReceipt!.logs).to.not.be.empty
   }).timeout(0)
 
@@ -216,9 +185,7 @@ describe('Test AION class methods', () => {
     let address: string = masteryContractAddress
     masteryContractInstance = new aionMastery.web3.eth.Contract(abi, address)
 
-    const val = await masteryContractInstance.methods
-      .num()
-      .call({ from: testAccount1.address })
+    const val = await masteryContractInstance.methods.num().call({ from: testAccount1.address })
 
     expect(val).to.not.equal(0)
   }).timeout(0)

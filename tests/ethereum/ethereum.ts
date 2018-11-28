@@ -10,11 +10,8 @@ import * as web3Utils from 'web3-utils'
 import Ethereum from '../../src/blockchains/ethereum'
 const ethereum = new Ethereum(nodeAddress.ethereum)
 const WithConstructorContract = {
-  sol: fs.readFileSync(
-    path.resolve(__dirname, 'contracts', 'WithConstructor.sol'),
-    'utf8'
-  ),
-  name: ':WithConstructor'
+  sol: fs.readFileSync(path.resolve(__dirname, 'contracts', 'WithConstructor.sol'), 'utf8'),
+  name: ':WithConstructor',
 }
 
 describe('Test Ethereum class methods', () => {
@@ -47,7 +44,7 @@ describe('Test Ethereum class methods', () => {
     const estimatedGas = await ethereum.estimateGas({
       data: code,
       from: accounts[0],
-      gas: 2000000
+      gas: 2000000,
     })
     expect(estimatedGas)
       .be.a('number')
@@ -57,24 +54,20 @@ describe('Test Ethereum class methods', () => {
 
   it('successfully deploys the WithConstructor contract with arguments', async () => {
     const compiled = await solc.compile(WithConstructorContract.sol)
-    const { interface: abi, bytecode: code } = compiled.contracts[
-      WithConstructorContract.name
-    ]
+    const { interface: abi, bytecode: code } = compiled.contracts[WithConstructorContract.name]
     const res: any = await ethereum.deploy({
       abi: JSON.parse(abi),
       code,
       from: accounts[0],
       gas: 2000000,
-      args: [15, web3Utils.fromUtf8('Titan')]
+      args: [15, web3Utils.fromUtf8('Titan')],
     })
     contractInstance = res.response
     expect(res.txReceipt.transactionHash).to.equal(res.txHash)
   }).timeout(0)
 
   it('expect data to equal Titan', async () => {
-    let data = await contractInstance.methods
-      .getData()
-      .call({ from: accounts[0] })
+    let data = await contractInstance.methods.getData().call({ from: accounts[0] })
     data = web3Utils.toUtf8(data)
     expect(data).to.equal('Titan')
   }).timeout(0)
@@ -83,9 +76,7 @@ describe('Test Ethereum class methods', () => {
     const res: any = await ethereum.getResponseWhenMined(
       contractInstance.methods.setA(2).send({ from: accounts[0], gas: 2000000 })
     )
-    const num = await contractInstance.methods
-      .add(2)
-      .call({ from: accounts[0] })
+    const num = await contractInstance.methods.add(2).call({ from: accounts[0] })
     expect(res.txReceipt.transactionHash).to.equal(res.txHash)
     expect(num).to.equal('4')
   }).timeout(0)

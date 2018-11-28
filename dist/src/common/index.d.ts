@@ -21,10 +21,16 @@ export interface Execute {
     gasPrice?: number;
     args?: any[];
 }
+export interface SignedMessage {
+    messageHash: string;
+    signature: string;
+    rawTransaction: string;
+}
 export default class Common {
     isOldWeb3: boolean;
     web3: any;
     constructor(isOldWeb3: boolean, web3: any);
+    isMainnet: () => Promise<boolean>;
     getAccounts: () => Promise<string[]>;
     getBalance: (address: string) => Promise<number>;
     getBalancesWithAccounts: () => Promise<{
@@ -33,8 +39,15 @@ export default class Common {
     }[]>;
     call: (params: CallParameters) => Promise<any>;
     sendTransaction: (params: TxParameters) => Promise<any>;
+    sendSignedTransaction: (rawTransaction: string) => Promise<{
+        confirmation: number | undefined;
+        txReceipt: TransactionReceipt | undefined;
+        txHash: string | undefined;
+        response: any;
+    }>;
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
     getResponseWhenMined: (functionCall: any) => Promise<{
+        confirmation: number | undefined;
         txReceipt: TransactionReceipt | undefined;
         txHash: string | undefined;
         response: any;
@@ -45,6 +58,8 @@ export default class Common {
     }>;
     getContract: (abi: any[], address: string) => any;
     estimateGas: (params: TxParameters) => Promise<number>;
+    encodeArguments: (params: any[], length: number) => any[];
+    signTransaction: (rawTx: Params, privateKey: string) => Promise<SignedMessage>;
     InjectedWeb3DeployContract: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
     InjectedDeploy: ({ abi, code, from, gas, args }: Execute) => Promise<{}>;
 }
