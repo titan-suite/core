@@ -44,15 +44,18 @@ export default class Common {
   }
 
   getNetworkId = async (): Promise<number> => {
+    let id!: number
     if (this.isOldWeb3) {
       this.web3.version.getNetwork((err: Error, netId: number) => {
         if (err) {
           throw err
         }
-        return netId
+        id = netId
       })
+    } else {
+      id = await this.web3.eth.net.getId()
     }
-    return this.web3.eth.net.getId()
+    return id
   }
 
   getAccounts = async (): Promise<string[]> => {

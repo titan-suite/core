@@ -19,15 +19,19 @@ const web3Utils = __importStar(require("web3-utils"));
 class Common {
     constructor(isOldWeb3, web3) {
         this.getNetworkId = () => __awaiter(this, void 0, void 0, function* () {
+            let id;
             if (this.isOldWeb3) {
                 this.web3.version.getNetwork((err, netId) => {
                     if (err) {
                         throw err;
                     }
-                    return netId;
+                    id = netId;
                 });
             }
-            return this.web3.eth.net.getId();
+            else {
+                id = yield this.web3.eth.net.getId();
+            }
+            return id;
         });
         this.getAccounts = () => __awaiter(this, void 0, void 0, function* () {
             if (this.isOldWeb3) {
