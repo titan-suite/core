@@ -65,7 +65,7 @@ class Common {
                 const etherBalance = yield this.getBalance(address);
                 accounts.push({
                     address,
-                    etherBalance: Number(etherBalance)
+                    etherBalance: Number(etherBalance),
                 });
             }
             return accounts;
@@ -95,7 +95,7 @@ class Common {
             })
                 .on('transactionHash', (TxHash) => {
                 txHash = TxHash;
-                console.log({ txHash });
+                // console.log({ txHash })
             })
                 .on('confirmation', (confirmationNumber, receipt) => {
                 confirmation = confirmationNumber;
@@ -105,7 +105,7 @@ class Common {
                 confirmation,
                 txReceipt,
                 txHash,
-                response
+                response,
             };
         });
         this.deploy = ({ code, abi, from, gas = 2000000, gasPrice = 10000000000, args, privateKey }) => __awaiter(this, void 0, void 0, function* () {
@@ -115,7 +115,7 @@ class Common {
                     code,
                     from,
                     gas,
-                    args
+                    args,
                 });
             }
             if (privateKey) {
@@ -123,7 +123,7 @@ class Common {
                     from,
                     data: code + (yield this.encodeArguments(args, 32)),
                     gas,
-                    gasPrice: yield this.web3.eth.gasPrice
+                    gasPrice: yield this.web3.eth.gasPrice,
                 }, privateKey);
                 return this.sendSignedTransaction(rawTransaction);
             }
@@ -131,12 +131,12 @@ class Common {
             return this.getResponseWhenMined(contract
                 .deploy({
                 data: code,
-                arguments: args
+                arguments: args,
             })
                 .send({
                 from,
                 gas,
-                gasPrice
+                gasPrice,
             }));
         });
         this.getContract = (abi, address) => {
@@ -148,15 +148,14 @@ class Common {
                 const { rawTransaction } = yield this.signTransaction({
                     to,
                     data,
-                    gas
-                    // gasPrice
+                    gas,
                 }, privateKey);
                 return this.sendSignedTransaction(rawTransaction);
             }
             return this.getResponseWhenMined(func.send({
                 from,
                 gas,
-                value // TODO check unit
+                value,
             }));
         });
         this.estimateGas = (params) => __awaiter(this, void 0, void 0, function* () {
@@ -202,7 +201,7 @@ class Common {
                     this.web3.eth.contract(abi).new(args, {
                         from,
                         data: code,
-                        gas
+                        gas,
                     }, (err, contract) => {
                         if (err) {
                             reject(err);
@@ -210,7 +209,7 @@ class Common {
                         else if (contract && contract.address) {
                             resolve({
                                 txHash: contract.transactionHash,
-                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
                             });
                         }
                     });
@@ -219,7 +218,7 @@ class Common {
                     this.web3.eth.contract(abi).new({
                         from,
                         data: code,
-                        gas
+                        gas,
                     }, (err, contract) => {
                         if (err) {
                             reject(err);
@@ -227,7 +226,7 @@ class Common {
                         else if (contract && contract.address) {
                             resolve({
                                 txHash: contract.transactionHash,
-                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash)
+                                txReceipt: this.web3.eth.getTransactionReceipt(contract.transactionHash),
                             });
                         }
                     });
