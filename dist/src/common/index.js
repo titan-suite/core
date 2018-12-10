@@ -85,7 +85,6 @@ class Common {
         this.getResponseWhenMined = (functionCall) => __awaiter(this, void 0, void 0, function* () {
             let txReceipt;
             let txHash;
-            let confirmation;
             const response = yield functionCall
                 .on('receipt', (Receipt) => {
                 txReceipt = Receipt;
@@ -96,13 +95,8 @@ class Common {
                 .on('transactionHash', (TxHash) => {
                 txHash = TxHash;
                 // console.log({ txHash })
-            })
-                .on('confirmation', (confirmationNumber, receipt) => {
-                confirmation = confirmationNumber;
-                txReceipt = receipt;
             });
             return {
-                confirmation,
                 txReceipt,
                 txHash,
                 response,

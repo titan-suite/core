@@ -117,7 +117,6 @@ export default class Common {
   getResponseWhenMined = async (functionCall: any) => {
     let txReceipt: undefined | TransactionReceipt
     let txHash: undefined | string
-    let confirmation: undefined | number
     const response = await functionCall
       .on('receipt', (Receipt: TransactionReceipt) => {
         txReceipt = Receipt
@@ -129,12 +128,7 @@ export default class Common {
         txHash = TxHash
         // console.log({ txHash })
       })
-      .on('confirmation', (confirmationNumber: number, receipt: TransactionReceipt) => {
-        confirmation = confirmationNumber
-        txReceipt = receipt
-      })
     return {
-      confirmation,
       txReceipt,
       txHash,
       response,

@@ -45,14 +45,12 @@ export default class Common {
     call: (params: CallParameters) => Promise<any>;
     sendTransaction: (params: TxParameters) => Promise<any>;
     sendSignedTransaction: (rawTransaction: string) => Promise<{
-        confirmation: number | undefined;
         txReceipt: TransactionReceipt | undefined;
         txHash: string | undefined;
         response: any;
     }>;
     getTxReceipt: (txHash: string) => Promise<TransactionReceipt>;
     getResponseWhenMined: (functionCall: any) => Promise<{
-        confirmation: number | undefined;
         txReceipt: TransactionReceipt | undefined;
         txHash: string | undefined;
         response: any;
@@ -63,7 +61,6 @@ export default class Common {
     }>;
     getContract: (abi: any[], address: string) => any;
     executeContractFunction: ({ func, to, from, gas, gasPrice, value, privateKey }: ExecuteContractFunction) => Promise<{
-        confirmation: number | undefined;
         txReceipt: TransactionReceipt | undefined;
         txHash: string | undefined;
         response: any;
