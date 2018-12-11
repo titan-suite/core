@@ -1,5 +1,5 @@
 import * as web3Utils from 'web3-utils'
-import { TransactionReceipt } from 'ethereum-types'
+// import { TransactionReceipt } from 'ethereum-types'
 export interface Params {
   to?: string
   value?: number | string
@@ -110,15 +110,15 @@ export default class Common {
     return this.getResponseWhenMined(this.web3.eth.sendSignedTransaction(rawTransaction))
   }
 
-  getTxReceipt = async (txHash: string): Promise<TransactionReceipt> => {
+  getTxReceipt = async (txHash: string): Promise<any> => {
     return this.web3.eth.getTransactionReceipt(txHash)
   }
 
   getResponseWhenMined = async (functionCall: any) => {
-    let txReceipt: undefined | TransactionReceipt
+    let txReceipt: undefined | any
     let txHash: undefined | string
     const response = await functionCall
-      .on('receipt', (Receipt: TransactionReceipt) => {
+      .on('receipt', (Receipt: any) => {
         txReceipt = Receipt
       })
       .on('error', (error: Error) => {

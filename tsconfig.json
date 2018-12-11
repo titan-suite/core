@@ -22,5 +22,5 @@
       "*": ["node_modules/*", "typings/*"]
     }
   },
-  "exclude": ["tests", "titanrc.ts"]
+  "exclude": ["tests", "titanrc.ts", "dist"]
 }
